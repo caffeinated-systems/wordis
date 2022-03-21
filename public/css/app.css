@@ -1,0 +1,47 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+body {
+    display:grid;
+    place-items: center;
+    background: #181818;
+    color: white;
+    font-family: 'Roboto', sans-serif;
+}
+#game {
+
+
+}
+.row{
+    display:flex;
+}
+.tile {
+    width:50px;
+    height:50px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    outline:1px solid currentColor;
+    font-size: 2rem;
+}
+.message {
+    font-size: 1.3rem;
+    text-align: center;
+    display:block;
+    margin-top: 1rem;
+    positon:fixed;
+    bottom: 3rem;
+}
+.tile.absent {
+    background: gray;
+}
+.tile.present {
+    background: yellow;
+}
+.tile.correct {
+    background: green;
+}
+
