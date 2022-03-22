@@ -1,7 +1,7 @@
 import Tile from './Tile';
 export default {
-        guessesAllowed: 6,
-        theWord: 'splodge',
+        guessesAllowed: 4,
+        theWord: 'dogs',
         currentRowIndex: 0,
         state: 'active',
         message: '',
@@ -16,7 +16,7 @@ export default {
         },
         init() {
             this.board = Array.from({ length: this.guessesAllowed }, () => {
-                return Array.from({ length: this.theWord.length }, () => new Tile);
+                return Array.from({ length: this.theWord.length }, (item, index) => new Tile(index));
             });
         },
         onKeyPress(key){
@@ -51,7 +51,10 @@ export default {
             if(this.currentGuess.length < this.theWord.length) {
                 return;
             }
-            this.refreshTileStatus();
+
+            // deal with invalid words
+
+            Tile.updateStatusForRow(this.currentRow, this.theWord);
             if(this.currentGuess === this.theWord) {
                 this.state = 'complete';
                 return this.message = 'You win!';

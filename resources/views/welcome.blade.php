@@ -10,11 +10,13 @@
         <script src="/js/app.js"></script>
     </head>
     <body>
-        <h1>Wordis</h1>
+        <h1 aria-label="Wordis">
+            <img id="wordis-logo" src='/assets/wordis_logo.png' alt='Wordis' />
+        </h1>
         <main  x-data="game" @keyup.window="onKeyPress($event.key)">
             <div id="game">
-                <template x-for="row in board">
-                    <div class="row">
+                <template x-for="(row, index) in board">
+                    <div class="row" :class="{ 'current': currentRowIndex === index }">
                         <template x-for="tile in row">
                             <div class="tile" :class="tile.status" x-text="tile.letter"></div>
                         </template>
