@@ -10,6 +10,7 @@
         <script src="/js/app.js"></script>
     </head>
     <body>
+        <h1>Wordis</h1>
         <main  x-data="game" @keyup.window="onKeyPress($event.key)">
             <div id="game">
                 <template x-for="row in board">

@@ -1,7 +1,7 @@
 import Tile from './Tile';
 export default {
-        guessesAllowed: 4,
-        theWord: 'cat',
+        guessesAllowed: 6,
+        theWord: 'splodge',
         currentRowIndex: 0,
         state: 'active',
         message: '',
