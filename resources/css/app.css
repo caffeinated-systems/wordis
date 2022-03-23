@@ -119,20 +119,32 @@ header {
 }
 
 output {
-    text-align: center;
+    text-align:left;
     display: block;
     font-weight: 500;
     font-size: 20px;
     margin-top: 1rem;
-    position: fixed;
-    inset: auto 0 3rem 0;
+    position: absolute;
+    top: 0;
+    right: -5.5rem;
+    width: 150px;
 }
 
 output:empty {
     display: none;
     color: #496e9e;
 }
-
+#keyboard{
+    margin:2px 0;
+}
+.key {
+    background: #c5c5c5;
+    border: 0;
+    margin: 2px;
+    height: 50px;
+    min-width: 40px;
+    border-radius: 4px;
+}
 #wordis-logo {
     max-width: 50%;
 }

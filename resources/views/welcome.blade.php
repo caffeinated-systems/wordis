@@ -13,6 +13,8 @@
         <h1 aria-label="Wordis">
             <img id="wordis-logo" src='/assets/wordis_logo.png' alt='Wordis' />
         </h1>
+        <output class="message" x-text="message"></output>
+
         <main  x-data="game" @keyup.window="onKeyPress($event.key)">
             <div id="game">
                 <template x-for="(row, index) in board">
@@ -23,7 +25,14 @@
                     </div>
                 </template>
             </div>
-            <output class="message" x-text="message"></output>
+            <div id="keyboard"  @click.stop="$event.target.matches('button') && onKeyPress($event.target.textContent)">
+                <template x-for="row in letters">
+                    <div class="row">
+                        <template x-for="key in row">
+                            <button class="key" type="button" x-text="key"></button>
+                        </template>
+                    </div>
+            </div>
         </main>
     </body>
 </html>

@@ -1,10 +1,23 @@
 import Tile from './Tile';
 export default {
-        guessesAllowed: 4,
-        theWord: 'dogs',
+        guessesAllowed: 3,
+        theWord: 'cat',
         currentRowIndex: 0,
         state: 'active',
         message: '',
+        letters: [
+            "QWERTYUIOP".split(""),
+            "ASDFGHJKL".split(""),
+            ['Enter', ..."ZXCVBNM".split(""), 'Backspace'],
+        ],
+        disses: [
+            'Nope',
+            'Wrong',
+            'Not even close',
+            'You are kidding, right?',
+            'You are a loser',
+            'Are you even trying?',
+        ],
         get currentRow() {
             return this.board[this.currentRowIndex];
         },
@@ -21,6 +34,7 @@ export default {
         },
         onKeyPress(key){
             this.message = '';
+            this.errors = false;
             if(/^[A-z]$/.test(key)) {
                 this.fillTile(key);
             } else if (key === 'Backspace') {
@@ -55,6 +69,7 @@ export default {
             // deal with invalid words
 
             Tile.updateStatusForRow(this.currentRow, this.theWord);
+
             if(this.currentGuess === this.theWord) {
                 this.state = 'complete';
                 return this.message = 'You win!';
@@ -64,7 +79,8 @@ export default {
                 return this.message = 'You lose!';
             }
             this.currentRowIndex++;
-            return this.message = 'Nope';
+
+            return this.message = this.disses[Math.floor(Math.random() * this.disses.length)];
         },
 
         refreshTileStatus(){

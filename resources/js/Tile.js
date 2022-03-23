@@ -36,6 +36,7 @@ export default class Tile {
         if (this.letter === theWord[this.position]) {
             return this.status = 'correct';
         }
+
         return this.status = 'present';
     }
 }
