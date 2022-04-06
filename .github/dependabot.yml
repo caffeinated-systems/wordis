@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "composer" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    target-branch: "main"
+    commit-message:
+      prefix: "composer"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "main"
+    commit-message:
+      prefix: "npm"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "main"
+    commit-message:
+      prefix: "github-actions"
