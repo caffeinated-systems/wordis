@@ -1,7 +1,7 @@
 import Tile from './Tile';
 export default {
         guessesAllowed: 3,
-        theWord: 'tiger',
+        theWord: 'dude',
         currentRowIndex: 0,
         state: 'active',
         message: '',
@@ -67,7 +67,6 @@ export default {
             }
 
             // deal with invalid words
-
             Tile.updateStatusForRow(this.currentRow, this.theWord);
 
             if(this.currentGuess === this.theWord) {
