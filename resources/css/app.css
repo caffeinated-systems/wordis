@@ -75,7 +75,7 @@ h1 {
 }
 
 #keyboard {
-    margin-top: 2rem;
+    margin: 4rem 0;
 }
 
  .key {
@@ -134,17 +134,7 @@ output:empty {
     display: none;
     color: #496e9e;
 }
-#keyboard{
-    margin:2px 0;
-}
-.key {
-    background: #c5c5c5;
-    border: 0;
-    margin: 2px;
-    height: 50px;
-    min-width: 40px;
-    border-radius: 4px;
-}
+
 #wordis-logo {
     max-width: 50%;
 }

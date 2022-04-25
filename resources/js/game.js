@@ -1,9 +1,10 @@
 import Tile from './Tile';
 export default {
-        guessesAllowed: 3,
-        theWord: 'dude',
+        guessesAllowed: 5,
+        theWord: 'france',
         currentRowIndex: 0,
         state: 'active',
+        errors: false,
         message: '',
         letters: [
             "QWERTYUIOP".split(""),
@@ -22,15 +23,22 @@ export default {
             return this.board[this.currentRowIndex];
         },
         get currentGuess() {
-            return this.currentRow.map(tile => tile.letter).join('');
+            return this.currentRow.map((tile) => tile.letter).join("");
         },
         get remainingGuesses() {
-            return this.guessesAllowed - this.currentRowIndex +1
+            return this.guessesAllowed - this.currentRowIndex -1;
         },
         init() {
             this.board = Array.from({ length: this.guessesAllowed }, () => {
                 return Array.from({ length: this.theWord.length }, (item, index) => new Tile(index));
             });
+        },
+        matchingTileForKey(key) {
+            return this.board
+                .flat()
+                .filter((tile) => tile.status)
+                .sort((t1, t2) => (t2.status === "correct") ? 1 : -1)
+                .find((tile) => tile.letter === key.toLowerCase());
         },
         onKeyPress(key){
             this.message = '';
@@ -45,15 +53,15 @@ export default {
         },
         fillTile(key) {
             for(let tile of this.currentRow) {
-                if (tile.letter === ''){
-                    tile.letter = key;
+                if (!tile.letter ){
+                    tile.fill(key);
                     break;
                 }
             }
         },
         emptyTile() {
             for(let tile of [...this.currentRow].reverse()) {
-                if (tile.letter !== ''){
+                if (tile.letter){
                     tile.empty();
                     break;
                 }
@@ -65,27 +73,20 @@ export default {
             if(this.currentGuess.length < this.theWord.length) {
                 return;
             }
-
             // deal with invalid words
             Tile.updateStatusForRow(this.currentRow, this.theWord);
 
             if(this.currentGuess === this.theWord) {
                 this.state = 'complete';
-                return this.message = 'You win!';
-            }
-            if( this.remaininGuesses === 0) {
+                this.message = 'You win!';
+            } else if ( this.remaininGuesses === 0) {
                 this.state = 'complete';
-                return this.message = 'You lose!';
+                this.message = 'You lose!';
+            } else {
+                this.currentRowIndex++;
+                this.message = this.disses[Math.floor(Math.random() * this.disses.length)];
             }
-            this.currentRowIndex++;
 
-            return this.message = this.disses[Math.floor(Math.random() * this.disses.length)];
         },
-
-        refreshTileStatus(){
-            for(let tile of this.currentRow){
-                tile.updateStatus(this.currentGuess, this.theWord);
-            };
-        }
     }
 
