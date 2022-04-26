@@ -1,7 +1,8 @@
 import Tile from './Tile';
+import { five_letter_words }  from './five_letter_words';
 export default {
         guessesAllowed: 5,
-        theWord: 'france',
+        theWord: 'tiger',
         currentRowIndex: 0,
         state: 'active',
         errors: false,
@@ -73,21 +74,25 @@ export default {
             if(this.currentGuess.length < this.theWord.length) {
                 return;
             }
+            if (!five_letter_words.includes(this.currentGuess.toUpperCase())) {
+                this.errors = true;
+                this.message = "Cheater, thats not a word...";
+                return;
+            }
             // deal with invalid words
             Tile.updateStatusForRow(this.currentRow, this.theWord);
 
             if(this.currentGuess === this.theWord) {
                 this.state = 'complete';
-                this.message = 'You win!';
+                this.message = 'Alright, you win';
                 confetti();
             } else if ( this.remaininGuesses === 0) {
                 this.state = 'complete';
-                this.message = 'You lose!';
+                this.message = 'Ha ha, sucka!';
             } else {
                 this.currentRowIndex++;
                 this.message = this.disses[Math.floor(Math.random() * this.disses.length)];
             }
-
         },
     }
 
