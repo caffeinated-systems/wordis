@@ -16,6 +16,7 @@ export default {
             'Nope',
             'Wrong',
             'Not even close',
+            'Stupid failure',
             'You are kidding, right?',
             'You are a loser',
             'Are you even trying?',
