@@ -91,7 +91,8 @@ test('guessing the word with the physical keyboard wins', function () {
 
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Alright, you win');
+    $page->assertSeeIn('.message', 'Alright, you win')
+        ->assertNoJavaScriptErrors();
     expect(tileStatuses($page, 0))->each->toBe('correct');
 });
 

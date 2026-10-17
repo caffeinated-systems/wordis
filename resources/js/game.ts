@@ -1,12 +1,18 @@
+import confetti from 'canvas-confetti';
 import Tile from './Tile';
-import { five_letter_words }  from './five_letter_words';
-export default {
+import { dictionary } from './dictionary';
+
+export type GameState = 'active' | 'complete';
+
+export default function game(answer: string) {
+    return {
         guessesAllowed: 5,
-        theWord: 'tiger',
+        answer,
         currentRowIndex: 0,
-        state: 'active',
+        state: 'active' as GameState,
         errors: false,
         message: '',
+        board: [] as Tile[][],
         letters: [
             "QWERTYUIOP".split(""),
             "ASDFGHJKL".split(""),
@@ -21,28 +27,28 @@ export default {
             'You are a loser',
             'Are you even trying?',
         ],
-        get currentRow() {
+        get currentRow(): Tile[] {
             return this.board[this.currentRowIndex];
         },
-        get currentGuess() {
+        get currentGuess(): string {
             return this.currentRow.map((tile) => tile.letter).join("");
         },
-        get remainingGuesses() {
+        get remainingGuesses(): number {
             return this.guessesAllowed - this.currentRowIndex -1;
         },
-        init() {
+        init(): void {
             this.board = Array.from({ length: this.guessesAllowed }, () => {
-                return Array.from({ length: this.theWord.length }, (item, index) => new Tile(index));
+                return Array.from({ length: this.answer.length }, (item, index) => new Tile(index));
             });
         },
-        matchingTileForKey(key) {
-            return this.board
-                .flat()
-                .filter((tile) => tile.status)
-                .sort((t1, t2) => (t2.status === "correct") ? 1 : -1)
-                .find((tile) => tile.letter === key.toLowerCase());
+        matchingTileForKey(key: string): Tile | undefined {
+            const tiles = this.board.flat().filter((tile) => tile.letter === key.toLowerCase());
+
+            return tiles.find((tile) => tile.status === 'correct')
+                ?? tiles.find((tile) => tile.status === 'present')
+                ?? tiles.find((tile) => tile.status === 'absent');
         },
-        onKeyPress(key){
+        onKeyPress(key: string): void {
             this.message = '';
             this.errors = false;
             if(/^[A-z]$/.test(key)) {
@@ -53,7 +59,7 @@ export default {
                 this.checkWord();
             }
         },
-        fillTile(key) {
+        fillTile(key: string): void {
             for(let tile of this.currentRow) {
                 if (!tile.letter ){
                     tile.fill(key);
@@ -61,7 +67,7 @@ export default {
                 }
             }
         },
-        emptyTile() {
+        emptyTile(): void {
             for(let tile of [...this.currentRow].reverse()) {
                 if (tile.letter){
                     tile.empty();
@@ -70,20 +76,19 @@ export default {
             }
         },
 
-        checkWord()
+        checkWord(): void
         {
-            if(this.currentGuess.length < this.theWord.length) {
+            if(this.currentGuess.length < this.answer.length) {
                 return;
             }
-            if (!five_letter_words.includes(this.currentGuess.toUpperCase())) {
+            if (!dictionary.has(this.currentGuess.toUpperCase())) {
                 this.errors = true;
                 this.message = "Cheater, thats not a word...";
                 return;
             }
-            // deal with invalid words
-            Tile.updateStatusForRow(this.currentRow, this.theWord);
+            Tile.updateStatusForRow(this.currentRow, this.answer);
 
-            if(this.currentGuess === this.theWord) {
+            if(this.currentGuess === this.answer) {
                 this.state = 'complete';
                 this.message = 'Alright, you win';
                 confetti();
@@ -95,5 +100,5 @@ export default {
                 this.message = this.disses[Math.floor(Math.random() * this.disses.length)];
             }
         },
-    }
-
+    };
+}

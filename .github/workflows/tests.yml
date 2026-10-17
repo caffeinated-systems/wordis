@@ -50,6 +50,9 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Type check
+        run: npm run typecheck
+
       - name: Build assets
         run: npm run build
 

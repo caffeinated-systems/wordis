@@ -5,11 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>Wordis</title>
-        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.ts'])
     </head>
     <body>
-        <main  x-data="game" @keyup.window="onKeyPress($event.key)" >
+        <main  x-data="game(@js($answer))" @keyup.window="onKeyPress($event.key)" >
             <header>
                 <h1 aria-label="Wordis">
                     <img id="wordis-logo" src='/assets/wordis_logo.png' alt='Wordis' />
