@@ -5,10 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>Wordis</title>
-        <link rel="stylesheet" href="{{ mix('/css/app.css') }}">
-        <script src="//unpkg.com/alpinejs" defer></script>
         <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-        <script src="{{ mix('/js/app.js') }}"></script>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>
         <main  x-data="game" @keyup.window="onKeyPress($event.key)" >
