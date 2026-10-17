@@ -1,3 +1,19 @@
+# Wordis
+
+## Local setup
+
+```shell
+composer setup                 # install deps, create .env, migrate, build assets
+php artisan boost:install      # optional: AI agent guidelines, skills and MCP config
+composer dev                   # or: php artisan serve + npm run dev
+```
+
+Requires PHP 8.3+ and Node 20.19+ (Node 24 recommended).
+
+Laravel Boost's generated files (`boost.json`, `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/skills/*`) are gitignored. Run `php artisan boost:install` to create them, and `php artisan boost:update` to refresh them.
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
 
 <p align="center">
