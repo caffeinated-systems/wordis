@@ -74,7 +74,7 @@ test('repeated letters are only marked present once', function () {
     guess($page, 'geese');
 
     expect(tileStatuses($page, 0))->toBe(['present', 'present', 'absent', 'absent', 'absent']);
-})->todo(issue: 375);
+});
 
 test('the on-screen keyboard reflects the status of guessed letters', function () {
     $page = visit('/');
