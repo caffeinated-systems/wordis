@@ -15,28 +15,25 @@ export default class Tile {
     }
 
     static updateStatusForRow(row, theWord){
+        let remainingLetters = theWord.split('');
+
         for (let tile of row) {
-            tile.updateStatus(theWord);
+            tile.status = tile.letter === theWord[tile.position] ? 'correct' : '';
+
+            if (tile.status === 'correct') {
+                remainingLetters.splice(remainingLetters.indexOf(tile.letter), 1);
+            }
         }
 
-        row.filter(tile => tile.status === 'present')
-            .filter((tile) =>
-                row.some(
-                    (t) => t.letter === tile.letter && t.status === 'correct'
-                )
-            )
-            .forEach((tile) => (tile.status = 'absent'));
-    }
+        for (let tile of row.filter((tile) => tile.status !== 'correct')) {
+            let index = remainingLetters.indexOf(tile.letter);
 
-    updateStatus(theWord) {
-
-        if (!theWord.includes(this.letter)) {
-            return this.status = 'absent';
+            if (index === -1) {
+                tile.status = 'absent';
+            } else {
+                tile.status = 'present';
+                remainingLetters.splice(index, 1);
+            }
         }
-        if (this.letter === theWord[this.position]) {
-            return this.status = 'correct';
-        }
-
-        return this.status = 'present';
     }
 }
