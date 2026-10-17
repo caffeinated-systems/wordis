@@ -1,5 +1,24 @@
 # Wordis
 
+A Wordle clone. You get five guesses to find a five-letter word, and the game taunts you every time you miss.
+
+## How to play
+
+Type a guess on your keyboard or the on-screen one, then press Enter. Each letter in the guess is marked:
+
+- **Correct** (green): the letter is in the answer, in this position.
+- **Present** (amber): the letter is in the answer, but somewhere else.
+- **Absent**: the letter isn't in the answer, or every copy of it is already accounted for. Guessing `GEESE` against `TIGER` marks one `E` present and the other two absent.
+
+The on-screen keyboard shows the best status you've found for each letter. Guesses must be real words from the dictionary; anything else is rejected. Find the answer within five guesses to win.
+
+## Stack
+
+- [Laravel 13](https://laravel.com) serves the page.
+- [Alpine.js](https://alpinejs.dev) runs the game, written in TypeScript under `resources/js/`.
+- [Vite](https://vite.dev) builds the assets.
+- [Pest](https://pestphp.com) runs the feature and browser tests.
+
 ## Local setup
 
 ```shell
@@ -8,73 +27,26 @@ php artisan boost:install      # optional: AI agent guidelines, skills and MCP c
 composer dev                   # or: php artisan serve + npm run dev
 ```
 
-Requires PHP 8.3+ and Node 20.19+ (Node 24 recommended).
+Requires PHP 8.4+ and Node 20.19+ (Node 24 recommended).
 
 Laravel Boost's generated files (`boost.json`, `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/skills/*`) are gitignored. Run `php artisan boost:install` to create them, and `php artisan boost:update` to refresh them.
 
----
+## Testing
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+```shell
+npx playwright install chromium   # once, for the browser tests
+npm run build                     # the tests use the built assets
+php artisan test                  # feature and browser tests
+npm run typecheck                 # TypeScript type check
+```
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The browser tests in `tests/Browser` play the game in a real Chromium against the answer `tiger`. CI runs the type check, the build and the full test suite on every pull request.
 
-## About Laravel
+## Project docs
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- [`GLOSSARY.md`](GLOSSARY.md): the game's vocabulary (answer, guess, dictionary).
+- [`docs/adr/`](docs/adr/): architecture decision records.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+[MIT](LICENSE).
