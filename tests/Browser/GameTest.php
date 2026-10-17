@@ -21,6 +21,14 @@ test('typing fills the current row', function () {
     expect(rowLetters($page, 0))->toBe('tri');
 });
 
+test('keys that are not letters do not fill the row', function () {
+    $page = visit('/');
+
+    $page->keys('#game', ['t', '[', '_', '`', 'r']);
+
+    expect(rowLetters($page, 0))->toBe('tr');
+});
+
 test('backspace removes the last letter', function () {
     $page = visit('/');
 
@@ -91,7 +99,8 @@ test('guessing the word with the physical keyboard wins', function () {
 
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Alright, you win');
+    $page->assertSeeIn('.message', 'Alright, you win')
+        ->assertNoJavaScriptErrors();
     expect(tileStatuses($page, 0))->each->toBe('correct');
 });
 

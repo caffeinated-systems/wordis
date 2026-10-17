@@ -1,24 +1,27 @@
+export type TileStatus = '' | 'correct' | 'present' | 'absent';
+
 export default class Tile {
     letter = '';
-    status = '';
+    status: TileStatus = '';
+    position: number;
 
-    constructor($postion) {
-        this.position = $postion;
+    constructor(position: number) {
+        this.position = position;
     }
 
-    fill(key){
+    fill(key: string): void {
         this.letter = key.toLowerCase();
     }
 
-    empty() {
+    empty(): void {
         this.letter = '';
     }
 
-    static updateStatusForRow(row, theWord){
-        let remainingLetters = theWord.split('');
+    static updateStatusForRow(row: Tile[], answer: string): void {
+        let remainingLetters = answer.split('');
 
         for (let tile of row) {
-            tile.status = tile.letter === theWord[tile.position] ? 'correct' : '';
+            tile.status = tile.letter === answer[tile.position] ? 'correct' : '';
 
             if (tile.status === 'correct') {
                 remainingLetters.splice(remainingLetters.indexOf(tile.letter), 1);
