@@ -87,7 +87,7 @@ export default {
                 this.state = 'complete';
                 this.message = 'Alright, you win';
                 confetti();
-            } else if ( this.remaininGuesses === 0) {
+            } else if (this.remainingGuesses === 0) {
                 this.state = 'complete';
                 this.message = 'Ha ha, sucka!';
             } else {
