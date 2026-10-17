@@ -46,3 +46,7 @@ The browser tests in `tests/Browser` play the game in a real Chromium against th
 
 - [`GLOSSARY.md`](GLOSSARY.md): the game's vocabulary (answer, guess, dictionary).
 - [`docs/adr/`](docs/adr/): architecture decision records.
+
+## License
+
+[MIT](LICENSE).
