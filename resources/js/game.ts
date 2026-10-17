@@ -51,7 +51,7 @@ export default function game(answer: string) {
         onKeyPress(key: string): void {
             this.message = '';
             this.errors = false;
-            if(/^[A-z]$/.test(key)) {
+            if(/^[a-z]$/i.test(key)) {
                 this.fillTile(key);
             } else if (key === 'Backspace') {
                 this.emptyTile();
