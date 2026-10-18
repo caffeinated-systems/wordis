@@ -1,3 +1,17 @@
+# Workflow
+
+## Adversarial review
+
+Every branch gets an **adversarial** review before its pull request is opened. This instruction is the user asking you to start the reviewer.
+
+1. Hand the review to a fresh agent that hasn't seen your reasoning. Start it as a Solo agent through the Solo MCP: `list_agent_tools`, then `spawn_agent`, then `send_input` with the returned `agent_instructions` followed by the brief. Without Solo, use a subagent. If you can't start either, ask the user to run the review in a new session.
+2. Commit first: the brief gives it the diff (`git diff main...HEAD`), which only shows committed work, and the issue or goal the branch should meet, not your summary of the change. It tells the reviewer to argue against merging, and to stay read-only because it shares your working tree: no edits, commits, checkouts or process restarts. It hunts for bugs, unhandled edge cases, missed requirements and regressions in existing behaviour, and backs each finding with a `file:line` and a concrete failure scenario. A Solo reviewer writes its report to a scratchpad named `review-<branch>-<round>` (`review-<branch>-1`, then `-2`), so a re-review never reads or overwrites an earlier report. A subagent returns its report to you directly.
+3. Wait for a Solo reviewer with `timer_fire_when_idle_any`. The timer also fires when the reviewer stops to ask a question or wait on a permission prompt. If the scratchpad is missing, read the agent's output with `get_process_output` and unblock it. Once you've read the report, close the reviewer with `close_process`.
+4. Check every finding against the code yourself. Fix the ones that hold up, and reject the rest with a reason.
+5. If the fixes change anything beyond wording, run another review on the new diff.
+
+Done when every finding is fixed or rejected, and the PR description has an **Adversarial review** section listing each finding with its outcome, or saying the review found nothing.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -97,6 +111,16 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
 - Activate the `deploying-to-cloud` skill whenever deploying to Laravel Cloud, configuring Cloud environments or resources, using the Cloud CLI, or troubleshooting Cloud deployments.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Add or update tests for behavior and logic changes when a test provides meaningful regression coverage.
+- Pure copy, styling, and layout-only changes do not require new or updated tests.
+- When test coverage applies, run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.
 
 === laravel/core rules ===
 
