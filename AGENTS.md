@@ -1,3 +1,16 @@
+# Workflow
+
+## Adversarial review
+
+Every branch gets an **adversarial** review before its pull request is opened. This instruction is the user asking you to start the reviewer.
+
+1. Hand the review to a fresh, read-only agent that hasn't seen your reasoning. Start it as a Solo agent through the Solo MCP: `list_agent_tools`, then `spawn_agent`, then `send_input` with the returned `agent_instructions` followed by the brief. Without Solo, use a subagent. If you can't start either, ask the user to run the review in a new session. Give it the diff (`git diff main...HEAD`) and the issue or goal it should meet, not your summary of the change.
+2. Its brief: argue against merging. It hunts for bugs, unhandled edge cases, missed requirements and regressions in existing behaviour, and backs each finding with a `file:line` and a concrete failure scenario. A Solo reviewer writes its report to a scratchpad named `review-<branch>`.
+3. Wait for a Solo reviewer with `timer_fire_when_idle_any`, read its scratchpad, then `close_process` it. Check every finding against the code yourself. Fix the ones that hold up, and reject the rest with a reason.
+4. If the fixes change behaviour, run another review on the new diff.
+
+Done when every finding is fixed or rejected, and the PR description has an **Adversarial review** section listing each finding with its outcome, or saying the review found nothing.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -97,6 +110,16 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
 - Activate the `deploying-to-cloud` skill whenever deploying to Laravel Cloud, configuring Cloud environments or resources, using the Cloud CLI, or troubleshooting Cloud deployments.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Add or update tests for behavior and logic changes when a test provides meaningful regression coverage.
+- Pure copy, styling, and layout-only changes do not require new or updated tests.
+- When test coverage applies, run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.
 
 === laravel/core rules ===
 
