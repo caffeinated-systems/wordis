@@ -137,4 +137,5 @@ output:empty {
 
 #wordis-logo {
     width: min(320px, 80vw);
+    height: auto;
 }
