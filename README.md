@@ -29,7 +29,7 @@ composer dev                   # or: php artisan serve + npm run dev
 
 Requires PHP 8.4+ and Node 20.19+ (Node 24 recommended).
 
-Laravel Boost's generated files (`boost.json`, `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/skills/*`) are gitignored. Run `php artisan boost:install` to create them, and `php artisan boost:update` to refresh them.
+Laravel Boost's generated files (`boost.json`, `.mcp.json`, `.claude/skills/*`) are gitignored. Run `php artisan boost:install` to create them, and `php artisan boost:update` to refresh them. `AGENTS.md` is tracked: its Workflow section is hand-written, and `boost:update` only rewrites the `<laravel-boost-guidelines>` block below it. `CLAUDE.md` imports it.
 
 ## Testing
 
