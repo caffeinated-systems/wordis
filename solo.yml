@@ -17,14 +17,14 @@ processes:
     restart_when_changed: []
     env: {}
   Logs:
-    command: tail -n 50 -F storage/logs/laravel.log
+    command: php artisan pail --timeout=0
     working_dir: null
     auto_start: false
     auto_restart: false
     restart_when_changed: []
     env: {}
   Queue:
-    command: php artisan queue:listen
+    command: php artisan queue:listen --tries=1 --timeout=0
     working_dir: null
     auto_start: false
     auto_restart: true
