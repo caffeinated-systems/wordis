@@ -1,3 +1,5 @@
+<p align="center"><img src="public/assets/wordis-logo.svg" alt="Wordis" width="320"></p>
+
 # Wordis
 
 A Wordle clone. You get five guesses to find a five-letter word, and the game taunts you every time you miss.
