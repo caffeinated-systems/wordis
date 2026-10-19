@@ -35,3 +35,6 @@ Thumbs.db
 /.claude/skills/infer-conventions/
 /.claude/skills/laravel-best-practices/
 /.claude/skills/testing-best-practices/
+
+# Personal agent instructions (Claude Code reads it; not shared)
+/CLAUDE.local.md

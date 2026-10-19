@@ -1,35 +1,3 @@
-# Workflow
-
-## Adversarial review
-
-Every branch gets an **adversarial** review before its pull request is opened. This instruction is the user asking you to start the reviewer.
-
-1. Hand the review to a fresh agent that hasn't seen your reasoning. Start it as a Solo agent through the Solo MCP: `list_agent_tools`, then `spawn_agent`, then `send_input` with the returned `agent_instructions` followed by the brief. Without Solo, use a subagent. If you can't start either, ask the user to run the review in a new session.
-2. Commit first: the brief gives it the diff (`git diff main...HEAD`), which only shows committed work, and the issue or goal the branch should meet, not your summary of the change. It tells the reviewer to argue against merging, and to stay read-only because it shares your working tree: no edits, commits, checkouts or process restarts. It hunts for bugs, unhandled edge cases, missed requirements and regressions in existing behaviour, and backs each finding with a `file:line` and a concrete failure scenario. Name a Solo reviewer `review-<branch>-<round>` (`review-<branch>-1`, then `-2`) and have it write its report to a scratchpad of the same name, so a re-review never reads or overwrites an earlier report and wind down can find both. A subagent returns its report to you directly.
-3. Wait for a Solo reviewer with `timer_fire_when_idle_any`. The timer also fires when the reviewer stops to ask a question or wait on a permission prompt. If the scratchpad is missing, read the agent's output with `get_process_output` and unblock it. Once you've read the report, close the reviewer with `close_process`.
-4. Check every finding against the code yourself. Fix the ones that hold up, and reject the rest with a reason.
-5. If the fixes change anything beyond wording, run another review on the new diff.
-
-Done when every finding is fixed or rejected, and the PR description has an **Adversarial review** section listing each finding with its outcome, or saying the review found nothing.
-
-## Merging
-
-The user merges every pull request. Once the PR is open, hand over its link; merging, by `gh pr merge`, the API or any other route, stays with the user. Keep pushing fixes and answering review comments on the open PR as usual. Workflows the user set up, like Dependabot auto-merge, are not agents.
-
-## Wind down
-
-When the user says a PR is merged, **wind down** its branch. Other sessions share this machine, Solo project and repo, so touch only what is provably the branch's, and ask the user about anything else.
-
-1. Confirm it with `gh pr view <number> --json state,headRefName,headRefOid`. Only a `MERGED` PR gets wound down.
-2. Close the branch's Solo agents other than yourself (reviewers are named exactly `review-<branch>-<n>`, `<n>` a number) with `close_process`, and stop any Solo processes running in its worktree. Cancel timers you set for it; another session's timers are out of reach, so leave those.
-3. Archive the branch's review scratchpads (named exactly `review-<branch>-<n>`) with `scratchpad_archive`. Complete the branch's Solo todos that are done, and list any open follow-ups to the user rather than closing them.
-4. If your session is in the branch's worktree, leave it first (`ExitWorktree` with `action: "keep"`, or move to the main checkout; steps 5 and 6 do the removal), and run the rest with `git -C <main checkout>`. Check each tip against the PR's `headRefOid`: the local branch, and the remote branch if GitHub's delete-on-merge left it; ask GitHub (`gh api repos/{owner}/{repo}/branches/<branch>`), since the local `origin/<branch>` outlives the remote one; a 404 means it's already gone. Ask about any that don't match, and keep that branch and its worktree.
-5. Find where the branch is checked out (`git worktree list`). If that is the main checkout itself, ask the user what to switch it to. If the worktree shows anything in `git status`, untracked files included, stop and tell the user; otherwise remove it.
-6. Delete each branch whose tip matched: the local one with `git branch -D`, the remote one if it still exists.
-7. Run `git fetch --prune origin`, then fast-forward `main` with `git fetch origin main:main`, which refuses anything but a fast-forward. If `main` is checked out somewhere, that fetch refuses too; tell the user rather than updating that checkout yourself.
-
-Done when the branch has no worktree, local or remote branch, open reviewer, timer of yours, unarchived review scratchpad or completed-but-open todo, and the user has heard about anything you left.
-
 <laravel-boost-guidelines>
 === foundation rules ===
 

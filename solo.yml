@@ -1,6 +1,6 @@
 # Visit https://soloterm.com to learn more
 name: wordle
-icon: null
+icon: public/favicon.ico
 processes:
   Serve:
     command: php artisan serve
