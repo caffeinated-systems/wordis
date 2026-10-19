@@ -15,14 +15,25 @@ jobs:
         uses: dependabot/fetch-metadata@v3.1.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-      - name: Enable auto-merge for Dependabot PRs
+      - name: Merge patch and minor updates once tests pass
         if: ${{contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)}}
-        run: gh pr merge --auto --merge "$PR_URL"
+        timeout-minutes: 20
+        # Only watch the tests check: this job is a check on the PR too, so `gh pr checks --watch` would wait on itself.
+        run: |
+          while true; do
+            result=$(gh pr checks "$PR_URL" --json workflow,name,bucket --jq '.[] | select(.workflow == "Tests" and .name == "tests") | .bucket' || true)
+            case "$result" in
+              pass) break ;;
+              fail|cancel|skipping) echo "tests: $result"; exit 1 ;;
+            esac
+            sleep 20
+          done
+          gh pr merge --merge "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: Ask for a review on major or unclassified updates
-        if: ${{!contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)}}
+      - name: Ask for a review on major, unclassified or failing updates
+        if: ${{failure() || !contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)}}
         run: gh pr edit "$PR_URL" --add-reviewer da-mask --add-label "major update"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
