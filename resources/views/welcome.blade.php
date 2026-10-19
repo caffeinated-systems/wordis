@@ -26,7 +26,7 @@
                     </div>
                 </template>
             </div>
-            <div id="keyboard"  @click.stop="onScreenKey($event)">
+            <div id="keyboard"  @click.stop="onScreenKey($event)" @mousedown="keepFocusOffKeys($event)">
                 <template x-for="row in letters">
                     <div class="row">
                         <template x-for="key in row">

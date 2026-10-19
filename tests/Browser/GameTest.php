@@ -166,3 +166,14 @@ test('pressing Enter on a focused on-screen key only presses that key', function
         ->assertPresent('#game > .row:nth-of-type(1).current')
         ->assertNoJavaScriptErrors();
 });
+
+test('pressing Enter after sliding off an on-screen key submits the guess', function () {
+    $page = visit('/');
+
+    $page->keys('#game', ['t', 'i', 'g', 'e']);
+    $page->drag('#keyboard [data-key="Backspace"]', '#game');
+    guess($page, 'r');
+
+    $page->assertSeeIn('.message', 'Alright, you win')
+        ->assertNoJavaScriptErrors();
+});
