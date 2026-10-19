@@ -165,12 +165,13 @@ output.correct {
     text-shadow: 0 0 12px rgba(38, 246, 110, 0.42);
 }
 
+/* Hidden rather than display: none, so screen readers keep the live region and announce new messages */
 output:empty {
-    display: none;
+    opacity: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    output {
+    output:not(:empty) {
         animation: pop .15s ease-out;
     }
 }

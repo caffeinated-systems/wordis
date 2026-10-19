@@ -44,7 +44,8 @@ test('an incomplete guess is ignored', function () {
 
     $page->assertSeeNothingIn('.message')
         ->assertPresent('#game > .row:nth-of-type(1).current');
-    expect(tileStatuses($page, 0))->each->toBe('');
+    expect(tileStatuses($page, 0))->each->toBe('')
+        ->and($page->script("getComputedStyle(document.querySelector('.message')).opacity"))->toBe('0');
 });
 
 test('a word that is not in the list is rejected', function () {
@@ -201,18 +202,24 @@ test('the message sits beside the board on desktop', function () {
 
     guess($page, 'crane');
 
-    expect($page->script("document.querySelector('.message').getBoundingClientRect().left > document.querySelector('#game').getBoundingClientRect().right"))->toBeTrue()
+    $bubble = $page->script("JSON.parse(JSON.stringify(document.querySelector('.message').getBoundingClientRect()))");
+    $firstRow = $page->script("JSON.parse(JSON.stringify(document.querySelector('#game > .row').getBoundingClientRect()))");
+    expect($bubble['left'])->toBeGreaterThan($firstRow['right'])
+        ->and($bubble['top'])->toBeGreaterThanOrEqual($firstRow['top'])
+        ->and($bubble['top'])->toBeLessThan($firstRow['bottom'])
         ->and($page->script('document.documentElement.scrollWidth'))->toBe(1280);
 });
 
 test('the message sits between the board and the keyboard on phones', function () {
     $page = visit('/');
     $page->resize(320, 700);
+    $keyboardTop = $page->script("document.querySelector('#keyboard').getBoundingClientRect().top");
 
     guess($page, 'abcde');
 
     $bubble = $page->script("JSON.parse(JSON.stringify(document.querySelector('.message').getBoundingClientRect()))");
     expect($bubble['top'])->toBeGreaterThan($page->script("document.querySelector('#game').getBoundingClientRect().bottom"))
         ->and($bubble['bottom'])->toBeLessThan($page->script("document.querySelector('#keyboard').getBoundingClientRect().top"))
+        ->and($page->script("document.querySelector('#keyboard').getBoundingClientRect().top"))->toBe($keyboardTop)
         ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
 });
