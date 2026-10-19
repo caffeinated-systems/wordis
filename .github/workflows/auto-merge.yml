@@ -6,15 +6,15 @@ permissions:
   contents: write
   checks: read
   actions: read
-
-concurrency:
-  group: auto-merge-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  statuses: read
 
 jobs:
   dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
+    concurrency:
+      group: auto-merge-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     steps:
       - name: Dependabot metadata
         id: metadata
@@ -29,7 +29,7 @@ jobs:
           while true; do
             pr=$(gh pr view "$PR_URL" --json headRefOid,statusCheckRollup)
             sha=$(jq -r .headRefOid <<<"$pr")
-            result=$(jq -r '.statusCheckRollup[] | select(.workflowName == "Tests" and .name == "tests") | if .status == "COMPLETED" then .conclusion else "PENDING" end' <<<"$pr")
+            result=$(jq -r '[.statusCheckRollup[] | select(.workflowName == "Tests" and .name == "tests")] | sort_by(.startedAt // "9999") | last // empty | if .status == "COMPLETED" then .conclusion else "PENDING" end' <<<"$pr")
             case "$result" in
               SUCCESS) break ;;
               ""|PENDING) sleep 20 ;;
