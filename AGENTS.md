@@ -21,10 +21,12 @@ The user merges every pull request. Once the PR is open, hand over its link; mer
 When the user says a PR is merged, **wind down** its branch. Other sessions share this machine, Solo project and repo, so touch only what is provably the branch's, and ask the user about anything else.
 
 1. Confirm it with `gh pr view <number> --json state,headRefName,headRefOid`. Only a `MERGED` PR gets wound down.
-2. Close the branch's reviewers (Solo agents named `review-<branch>-<round>`) and any other agents you started for it with `close_process`, and cancel any timers you set for the branch.
-3. Archive the branch's scratchpads (`review-<branch>-<round>`, plus any others you made for it) with `scratchpad_archive`. Complete the branch's Solo todos that are done, and list any open follow-ups to the user rather than closing them.
-4. Working from the main checkout, find where the branch is checked out (`git worktree list`). If that is the main checkout itself, ask the user before switching it. If the worktree shows anything in `git status`, untracked files included, stop and tell the user; otherwise remove it. Delete the local branch with `git branch -D`, and the remote branch if GitHub's delete-on-merge left it, only while its tip is the PR's `headRefOid`; otherwise ask.
-5. Fetch with `--prune`, then fast-forward `main` with `git fetch origin main:main`, which refuses anything but a fast-forward. If it refuses, stop and tell the user.
+2. Close the branch's Solo agents (reviewers are named `review-<branch>-<round>`) with `close_process`, and stop any Solo processes running in its worktree. Cancel timers you set for it; another session's timers are out of reach, so leave those.
+3. Archive the branch's scratchpads (`review-<branch>-<round>`) with `scratchpad_archive`. Complete the branch's Solo todos that are done, and list any open follow-ups to the user rather than closing them.
+4. Run the rest from the main checkout with `git -C <main checkout>`, so you never stand in the worktree you remove. Check each tip against the PR's `headRefOid`: the local branch, and the remote branch if GitHub's delete-on-merge left it. Ask about any that don't match, and keep that branch and its worktree.
+5. Find where the branch is checked out (`git worktree list`). If that is the main checkout itself, ask the user what to switch it to. If the worktree shows anything in `git status`, untracked files included, stop and tell the user; otherwise remove it.
+6. Delete each branch whose tip matched: the local one with `git branch -D`, the remote one if it still exists.
+7. Fetch with `--prune` and fast-forward `main`: `git fetch origin main:main` when `main` isn't checked out anywhere, or `git merge --ff-only origin/main` in the checkout that has it. If either refuses, tell the user.
 
 Done when the branch has no worktree, local or remote branch, open reviewer, timer of yours, unarchived scratchpad or completed-but-open todo, and the user has heard about anything you left.
 
