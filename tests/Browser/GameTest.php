@@ -125,3 +125,17 @@ test('five wrong guesses lose the game', function () {
     $page->assertSeeIn('.message', 'Ha ha, sucka!')
         ->assertNoJavaScriptErrors();
 });
+
+test('the page fits a phone screen without scrolling sideways', function (int $width) {
+    $page = visit('/');
+    $page->resize($width, 800);
+
+    foreach (['P', 'L', 'Backspace', 'B', 'C', 'D', 'E', 'Enter'] as $key) {
+        $page->click("#keyboard [data-key=\"{$key}\"]");
+    }
+
+    $page->assertSeeIn('.message', 'Cheater, thats not a word...')
+        ->assertNoJavaScriptErrors();
+    expect(rowLetters($page, 0))->toBe('pbcde')
+        ->and($page->script('document.documentElement.scrollWidth'))->toBe($width);
+})->with([360, 390]);

@@ -35,7 +35,8 @@
                                 :class="matchingTileForKey(key)?.status"
                                 type="button"
                                 :data-key="key"
-                                x-text="key">
+                                :aria-label="key"
+                                x-text="key === 'Backspace' ? '⌫' : key">
                             </button>
                         </template>
                     </div>
