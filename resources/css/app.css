@@ -19,6 +19,10 @@ body {
     font-family: Poppins, sans-serif;
 }
 
+main {
+    width: min(440px, 100vw - 2rem);
+}
+
 h1 {
     text-align: center;
     margin-top: 0;
@@ -30,7 +34,7 @@ h1 {
     background-image: linear-gradient(153deg, #1c2b45 13%, #0c1321 85%), linear-gradient(149deg, #fec63b 3%, rgba(254, 198, 59, 0) 80%);
     position: relative;
     border-radius: 20px;
-    width: 400px;
+    width: min(400px, 100%);
     margin: auto;
 }
 
@@ -78,13 +82,18 @@ h1 {
     margin: 4rem 0;
 }
 
- .key {
+.key {
+    width: min(40px, 10% - 4px);
+    padding: 0;
     background: #c5c5c5;
     border: 0;
     margin: 2px;
     height: 50px;
-    min-width: 40px;
     border-radius: 4px;
+}
+
+.key[data-key="Enter"], .key[data-key="Backspace"] {
+    width: min(60px, 15% - 4px);
 }
 
 .row.invalid .tile, .tile.invalid {
@@ -133,6 +142,18 @@ output {
 output:empty {
     display: none;
     color: #496e9e;
+}
+
+@media (max-width: 640px) {
+    output, output:empty {
+        display: block;
+        position: static;
+        width: auto;
+        min-height: 1.5em;
+        line-height: 1.5;
+        margin: 0 0 .5rem;
+        text-align: center;
+    }
 }
 
 #wordis-logo {
