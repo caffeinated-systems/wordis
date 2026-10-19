@@ -44,7 +44,8 @@ test('an incomplete guess is ignored', function () {
 
     $page->assertSeeNothingIn('.message')
         ->assertPresent('#game > .row:nth-of-type(1).current');
-    expect(tileStatuses($page, 0))->each->toBe('');
+    expect(tileStatuses($page, 0))->each->toBe('')
+        ->and($page->script("getComputedStyle(document.querySelector('.message')).opacity"))->toBe('0');
 });
 
 test('a word that is not in the list is rejected', function () {
@@ -124,6 +125,7 @@ test('five wrong guesses lose the game', function () {
 
     $page->assertSeeIn('.message', 'Ha ha, sucka!')
         ->assertNoJavaScriptErrors();
+    expect($page->script("getComputedStyle(document.querySelector('.message')).color"))->toBe('rgb(247, 247, 73)');
 });
 
 test('the page fits a phone screen without scrolling sideways', function (int $width) {
@@ -176,4 +178,48 @@ test('pressing Enter after sliding off an on-screen key submits the guess', func
 
     $page->assertSeeIn('.message', 'Alright, you win')
         ->assertNoJavaScriptErrors();
+});
+
+test('the message colour shows what happened', function () {
+    $page = visit('/');
+    $messageColour = fn () => $page->script("getComputedStyle(document.querySelector('.message')).color");
+
+    guess($page, 'abcde');
+    expect($messageColour())->toBe('rgb(255, 92, 92)');
+
+    $page->keys('#game', array_fill(0, 5, 'Backspace'));
+    guess($page, 'crane');
+    expect($messageColour())->toBe('rgb(247, 247, 73)');
+
+    guess($page, 'tiger');
+    expect($messageColour())->toBe('rgb(71, 215, 71)');
+    $page->assertNoJavaScriptErrors();
+});
+
+test('the message sits beside the board on desktop', function () {
+    $page = visit('/');
+    $page->resize(1280, 800);
+
+    guess($page, 'crane');
+
+    $bubble = $page->script("JSON.parse(JSON.stringify(document.querySelector('.message').getBoundingClientRect()))");
+    $firstRow = $page->script("JSON.parse(JSON.stringify(document.querySelector('#game > .row').getBoundingClientRect()))");
+    expect($bubble['left'])->toBeGreaterThan($firstRow['right'])
+        ->and($bubble['top'])->toBeGreaterThanOrEqual($firstRow['top'])
+        ->and($bubble['top'])->toBeLessThan($firstRow['bottom'])
+        ->and($page->script('document.documentElement.scrollWidth'))->toBe(1280);
+});
+
+test('the message sits between the board and the keyboard on phones', function () {
+    $page = visit('/');
+    $page->resize(320, 700);
+    $keyboardTop = $page->script("document.querySelector('#keyboard').getBoundingClientRect().top");
+
+    guess($page, 'abcde');
+
+    $bubble = $page->script("JSON.parse(JSON.stringify(document.querySelector('.message').getBoundingClientRect()))");
+    expect($bubble['top'])->toBeGreaterThan($page->script("document.querySelector('#game').getBoundingClientRect().bottom"))
+        ->and($bubble['bottom'])->toBeLessThan($page->script("document.querySelector('#keyboard').getBoundingClientRect().top"))
+        ->and($page->script("document.querySelector('#keyboard').getBoundingClientRect().top"))->toBe($keyboardTop)
+        ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
 });

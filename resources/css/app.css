@@ -123,36 +123,88 @@ h1 {
     background: var(--absent-color);
 }
 
-header {
-    position: relative;
-}
-
 output {
-    text-align:left;
-    display: block;
-    font-weight: 500;
-    font-size: 20px;
-    margin-top: 1rem;
+    --bubble-fill: #1a2942;
+    --bubble-edge: #6ba0e2;
     position: absolute;
-    top: 0;
-    right: -5.5rem;
-    width: 150px;
+    z-index: 1;
+    pointer-events: none;
+    top: 20px;
+    left: calc(100% + 28px);
+    width: max-content;
+    max-width: 220px;
+    padding: 10px 15px;
+    border-radius: 16px;
+    background: var(--bubble-fill);
+    box-shadow: 0 0 0 2px var(--bubble-edge), 0 0 18px rgba(107, 160, 226, .35);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--present-color);
+    text-shadow: 0 0 12px rgba(246, 171, 38, 0.42);
 }
 
+output::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: -14px;
+    border: 8px solid transparent;
+    border-left: 0;
+    border-right: 14px solid var(--bubble-fill);
+    filter: drop-shadow(-2px 0 0 var(--bubble-edge));
+}
+
+output.invalid {
+    color: #ff5c5c;
+    text-shadow: 0 0 12px rgba(246, 38, 38, 0.42);
+}
+
+output.correct {
+    color: var(--correct-color);
+    text-shadow: 0 0 12px rgba(38, 246, 110, 0.42);
+}
+
+/* Hidden rather than display: none, so screen readers keep the live region and announce new messages */
 output:empty {
-    display: none;
-    color: #496e9e;
+    opacity: 0;
 }
 
-@media (max-width: 640px) {
-    output, output:empty {
-        display: block;
-        position: static;
-        width: auto;
-        min-height: 1.5em;
-        line-height: 1.5;
-        margin: 0 0 .5rem;
+@media (prefers-reduced-motion: no-preference) {
+    output:not(:empty) {
+        animation: pop .15s ease-out;
+    }
+}
+
+@keyframes pop {
+    from {
+        opacity: 0;
+        scale: .85;
+    }
+}
+
+/* ponytail: below 960px there's no room beside the board, so the bubble floats in the gap above the keyboard */
+@media (max-width: 960px) {
+    output {
+        top: calc(100% + 22px);
+        left: 50%;
+        translate: -50%;
+        max-width: 100%;
         text-align: center;
+    }
+
+    output::after {
+        top: -14px;
+        left: 50%;
+        translate: -50%;
+        border: 8px solid transparent;
+        border-top: 0;
+        border-bottom: 14px solid var(--bubble-fill);
+        filter: drop-shadow(0 -2px 0 var(--bubble-edge));
+    }
+
+    #keyboard {
+        margin-top: 4.75rem;
     }
 }
 
