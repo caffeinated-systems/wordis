@@ -5,7 +5,7 @@
 Every branch gets an **adversarial** review before its pull request is opened. This instruction is the user asking you to start the reviewer.
 
 1. Hand the review to a fresh agent that hasn't seen your reasoning. Start it as a Solo agent through the Solo MCP: `list_agent_tools`, then `spawn_agent`, then `send_input` with the returned `agent_instructions` followed by the brief. Without Solo, use a subagent. If you can't start either, ask the user to run the review in a new session.
-2. Commit first: the brief gives it the diff (`git diff main...HEAD`), which only shows committed work, and the issue or goal the branch should meet, not your summary of the change. It tells the reviewer to argue against merging, and to stay read-only because it shares your working tree: no edits, commits, checkouts or process restarts. It hunts for bugs, unhandled edge cases, missed requirements and regressions in existing behaviour, and backs each finding with a `file:line` and a concrete failure scenario. A Solo reviewer writes its report to a scratchpad named `review-<branch>-<round>` (`review-<branch>-1`, then `-2`), so a re-review never reads or overwrites an earlier report. A subagent returns its report to you directly.
+2. Commit first: the brief gives it the diff (`git diff main...HEAD`), which only shows committed work, and the issue or goal the branch should meet, not your summary of the change. It tells the reviewer to argue against merging, and to stay read-only because it shares your working tree: no edits, commits, checkouts or process restarts. It hunts for bugs, unhandled edge cases, missed requirements and regressions in existing behaviour, and backs each finding with a `file:line` and a concrete failure scenario. Name a Solo reviewer `review-<branch>-<round>` (`review-<branch>-1`, then `-2`) and have it write its report to a scratchpad of the same name, so a re-review never reads or overwrites an earlier report and wind down can find both. A subagent returns its report to you directly.
 3. Wait for a Solo reviewer with `timer_fire_when_idle_any`. The timer also fires when the reviewer stops to ask a question or wait on a permission prompt. If the scratchpad is missing, read the agent's output with `get_process_output` and unblock it. Once you've read the report, close the reviewer with `close_process`.
 4. Check every finding against the code yourself. Fix the ones that hold up, and reject the rest with a reason.
 5. If the fixes change anything beyond wording, run another review on the new diff.
@@ -14,19 +14,19 @@ Done when every finding is fixed or rejected, and the PR description has an **Ad
 
 ## Merging
 
-The user merges every pull request. Once the PR is open, hand over its link and stop there: merging, by `gh pr merge`, the API or any other route, stays with the user.
+The user merges every pull request. Once the PR is open, hand over its link; merging, by `gh pr merge`, the API or any other route, stays with the user. Keep pushing fixes and answering review comments on the open PR as usual. Workflows the user set up, like Dependabot auto-merge, are not agents.
 
 ## Wind down
 
-When the user says a PR is merged, **wind down** its branch:
+When the user says a PR is merged, **wind down** its branch. Other sessions share this machine, Solo project and repo, so touch only what is provably the branch's, and ask the user about anything else.
 
-1. Confirm it with `gh pr view <number> --json state`. Only a `MERGED` PR gets wound down.
-2. Close the branch's remaining Solo agents with `close_process`, and cancel its timers.
-3. Archive the branch's scratchpads (`review-<branch>-*` and any others it made) with `scratchpad_archive`, and complete the branch's Solo todos.
-4. Remove the branch's worktree, delete the local branch, and delete the remote branch.
-5. Fast-forward local `main` to `origin/main`.
+1. Confirm it with `gh pr view <number> --json state,headRefName,headRefOid`. Only a `MERGED` PR gets wound down.
+2. Close the branch's reviewers (Solo agents named `review-<branch>-<round>`) with `close_process`, and cancel any timers you set for the branch.
+3. Archive the branch's scratchpads (`review-<branch>-<round>`, plus any others you made for it) with `scratchpad_archive`. Complete the branch's Solo todos that are done, and list any open follow-ups to the user rather than closing them.
+4. From the main checkout, find the worktree with the branch checked out (`git worktree list`). If it has uncommitted changes, stop and tell the user; otherwise remove it. Delete the local branch with `git branch -D` only when its tip is the PR's `headRefOid`; otherwise ask. GitHub deletes the remote branch on merge; delete it yourself only if it still exists.
+5. Fetch `origin` with `--prune`, then fast-forward local `main` to `origin/main`. If it won't fast-forward, stop and tell the user.
 
-Done when nothing for the branch is left: no worktree, local or remote branch, open Solo agent, pending timer, unarchived scratchpad or open todo.
+Done when the branch has no worktree, local or remote branch, open reviewer, timer of yours, unarchived scratchpad or completed-but-open todo, and the user has heard about anything you left.
 
 <laravel-boost-guidelines>
 === foundation rules ===
