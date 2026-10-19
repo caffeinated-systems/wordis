@@ -29,16 +29,19 @@ jobs:
           while true; do
             pr=$(gh pr view "$PR_URL" --json headRefOid,statusCheckRollup)
             sha=$(jq -r .headRefOid <<<"$pr")
-            result=$(jq -r '[.statusCheckRollup[] | select(.workflowName == "Tests" and .name == "tests")] | sort_by(.startedAt // "9999") | last // empty | if .status == "COMPLETED" then .conclusion else "PENDING" end' <<<"$pr")
+            # A newer push gets its own run, or stays with whoever pushed it.
+            if [ "$sha" != "$HEAD_SHA" ]; then echo "head moved to $sha"; exit 0; fi
+            result=$(jq -r '[.statusCheckRollup[] | select(.workflowName == "Tests" and .name == "tests")] | if length == 0 then "" elif any(.status != "COMPLETED") then "PENDING" else max_by(.completedAt).conclusion end' <<<"$pr")
             case "$result" in
               SUCCESS) break ;;
               ""|PENDING) sleep 20 ;;
               *) echo "tests: $result"; exit 1 ;;
             esac
           done
-          gh pr merge --merge --match-head-commit "$sha" "$PR_URL"
+          gh pr merge --merge --match-head-commit "$HEAD_SHA" "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
+          HEAD_SHA: ${{github.event.pull_request.head.sha}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Ask for a review on failing updates
         if: ${{failure() && contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)}}
