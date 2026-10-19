@@ -12,6 +12,22 @@ Every branch gets an **adversarial** review before its pull request is opened. T
 
 Done when every finding is fixed or rejected, and the PR description has an **Adversarial review** section listing each finding with its outcome, or saying the review found nothing.
 
+## Merging
+
+The user merges every pull request. Once the PR is open, hand over its link and stop there: merging, by `gh pr merge`, the API or any other route, stays with the user.
+
+## Wind down
+
+When the user says a PR is merged, **wind down** its branch:
+
+1. Confirm it with `gh pr view <number> --json state`. Only a `MERGED` PR gets wound down.
+2. Close the branch's remaining Solo agents with `close_process`, and cancel its timers.
+3. Archive the branch's scratchpads (`review-<branch>-*` and any others it made) with `scratchpad_archive`, and complete the branch's Solo todos.
+4. Remove the branch's worktree, delete the local branch, and delete the remote branch.
+5. Fast-forward local `main` to `origin/main`.
+
+Done when nothing for the branch is left: no worktree, local or remote branch, open Solo agent, pending timer, unarchived scratchpad or open todo.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
