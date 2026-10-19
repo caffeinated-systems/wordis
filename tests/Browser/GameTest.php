@@ -177,3 +177,41 @@ test('pressing Enter after sliding off an on-screen key submits the guess', func
     $page->assertSeeIn('.message', 'Alright, you win')
         ->assertNoJavaScriptErrors();
 });
+
+test('the message colour shows what happened', function () {
+    $page = visit('/');
+
+    guess($page, 'abcde');
+    $page->assertAttributeContains('.message', 'class', 'invalid');
+
+    $page->keys('#game', array_fill(0, 5, 'Backspace'));
+    guess($page, 'crane');
+    $page->assertAttributeDoesntContain('.message', 'class', 'invalid')
+        ->assertAttributeDoesntContain('.message', 'class', 'correct');
+
+    guess($page, 'tiger');
+    $page->assertAttributeContains('.message', 'class', 'correct')
+        ->assertNoJavaScriptErrors();
+});
+
+test('the message sits beside the board on desktop', function () {
+    $page = visit('/');
+    $page->resize(1280, 800);
+
+    guess($page, 'crane');
+
+    expect($page->script("document.querySelector('.message').getBoundingClientRect().left > document.querySelector('#game').getBoundingClientRect().right"))->toBeTrue()
+        ->and($page->script('document.documentElement.scrollWidth'))->toBe(1280);
+});
+
+test('the message sits between the board and the keyboard on phones', function () {
+    $page = visit('/');
+    $page->resize(320, 700);
+
+    guess($page, 'abcde');
+
+    $bubble = $page->script("JSON.parse(JSON.stringify(document.querySelector('.message').getBoundingClientRect()))");
+    expect($bubble['top'])->toBeGreaterThan($page->script("document.querySelector('#game').getBoundingClientRect().bottom"))
+        ->and($bubble['bottom'])->toBeLessThan($page->script("document.querySelector('#keyboard').getBoundingClientRect().top"))
+        ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
+});
