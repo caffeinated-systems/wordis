@@ -21,10 +21,10 @@ The user merges every pull request. Once the PR is open, hand over its link; mer
 When the user says a PR is merged, **wind down** its branch. Other sessions share this machine, Solo project and repo, so touch only what is provably the branch's, and ask the user about anything else.
 
 1. Confirm it with `gh pr view <number> --json state,headRefName,headRefOid`. Only a `MERGED` PR gets wound down.
-2. Close the branch's reviewers (Solo agents named `review-<branch>-<round>`) with `close_process`, and cancel any timers you set for the branch.
+2. Close the branch's reviewers (Solo agents named `review-<branch>-<round>`) and any other agents you started for it with `close_process`, and cancel any timers you set for the branch.
 3. Archive the branch's scratchpads (`review-<branch>-<round>`, plus any others you made for it) with `scratchpad_archive`. Complete the branch's Solo todos that are done, and list any open follow-ups to the user rather than closing them.
-4. From the main checkout, find the worktree with the branch checked out (`git worktree list`). If it has uncommitted changes, stop and tell the user; otherwise remove it. Delete the local branch with `git branch -D` only when its tip is the PR's `headRefOid`; otherwise ask. GitHub deletes the remote branch on merge; delete it yourself only if it still exists.
-5. Fetch `origin` with `--prune`, then fast-forward local `main` to `origin/main`. If it won't fast-forward, stop and tell the user.
+4. Working from the main checkout, find where the branch is checked out (`git worktree list`). If that is the main checkout itself, ask the user before switching it. If the worktree shows anything in `git status`, untracked files included, stop and tell the user; otherwise remove it. Delete the local branch with `git branch -D`, and the remote branch if GitHub's delete-on-merge left it, only while its tip is the PR's `headRefOid`; otherwise ask.
+5. Fetch with `--prune`, then fast-forward `main` with `git fetch origin main:main`, which refuses anything but a fast-forward. If it refuses, stop and tell the user.
 
 Done when the branch has no worktree, local or remote branch, open reviewer, timer of yours, unarchived scratchpad or completed-but-open todo, and the user has heard about anything you left.
 
