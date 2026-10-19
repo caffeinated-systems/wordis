@@ -10,7 +10,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
     </head>
     <body>
-        <main  x-data="game(@js($answer))" @keyup.window="onKeyPress($event.key)" >
+        <main  x-data="game(@js($answer))" @keyup.window="onPhysicalKey($event)" >
             <header>
                 <h1 aria-label="Wordis">
                     <img id="wordis-logo" src='/assets/wordis-logo.svg' alt='Wordis' width="4460" height="995" />
@@ -26,7 +26,7 @@
                     </div>
                 </template>
             </div>
-            <div id="keyboard"  @click.stop="$event.target.closest('button') && onKeyPress($event.target.closest('button').dataset.key)">
+            <div id="keyboard"  @click.stop="onScreenKey($event)" @mousedown="keepFocusOffKeys($event)">
                 <template x-for="row in letters">
                     <div class="row">
                         <template x-for="key in row">

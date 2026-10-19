@@ -48,6 +48,25 @@ export default function game(answer: string) {
                 ?? tiles.find((tile) => tile.status === 'present')
                 ?? tiles.find((tile) => tile.status === 'absent');
         },
+        onPhysicalKey(event: KeyboardEvent): void {
+            // Enter on a focused on-screen key has already pressed that key.
+            if (event.key === 'Enter' && (event.target as Element).closest('.key')) {
+                return;
+            }
+            this.onKeyPress(event.key);
+        },
+        keepFocusOffKeys(event: MouseEvent): void {
+            // A tap must not leave a key focused, or a physical Enter would press it again.
+            // Tab still focuses keys for players who use them from the keyboard.
+            event.preventDefault();
+            (document.activeElement as HTMLElement | null)?.blur();
+        },
+        onScreenKey(event: MouseEvent): void {
+            const button = (event.target as Element).closest('button');
+            if (button) {
+                this.onKeyPress(button.dataset.key!);
+            }
+        },
         onKeyPress(key: string): void {
             this.message = '';
             this.errors = false;

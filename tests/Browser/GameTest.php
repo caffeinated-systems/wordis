@@ -142,3 +142,38 @@ test('the page fits a phone screen without scrolling sideways', function (int $w
         ->and($page->script('document.documentElement.scrollWidth'))->toBe($width)
         ->and($page->script("document.querySelector('#game').getBoundingClientRect().top"))->toBe($boardTop);
 })->with([320, 360, 390]);
+
+test('pressing Enter after tapping an on-screen key submits the guess', function () {
+    $page = visit('/');
+
+    foreach (['T', 'I', 'G', 'E', 'R', 'Backspace'] as $key) {
+        $page->click("#keyboard [data-key=\"{$key}\"]");
+    }
+    guess($page, 'r');
+
+    $page->assertSeeIn('.message', 'Alright, you win')
+        ->assertNoJavaScriptErrors();
+});
+
+test('pressing Enter on a focused on-screen key only presses that key', function () {
+    $page = visit('/');
+
+    $page->keys('#game', ['t', 'i', 'g', 'e']);
+    $page->keys('#keyboard [data-key="R"]', ['Enter']);
+
+    expect(rowLetters($page, 0))->toBe('tiger');
+    $page->assertSeeNothingIn('.message')
+        ->assertPresent('#game > .row:nth-of-type(1).current')
+        ->assertNoJavaScriptErrors();
+});
+
+test('pressing Enter after sliding off an on-screen key submits the guess', function () {
+    $page = visit('/');
+
+    $page->keys('#game', ['t', 'i', 'g', 'e']);
+    $page->drag('#keyboard [data-key="Backspace"]', '#game');
+    guess($page, 'r');
+
+    $page->assertSeeIn('.message', 'Alright, you win')
+        ->assertNoJavaScriptErrors();
+});
