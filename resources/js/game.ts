@@ -48,6 +48,25 @@ export default function game(answer: string) {
                 ?? tiles.find((tile) => tile.status === 'present')
                 ?? tiles.find((tile) => tile.status === 'absent');
         },
+        onPhysicalKey(event: KeyboardEvent): void {
+            // Enter on a focused on-screen key has already pressed that key.
+            if (event.key === 'Enter' && (event.target as Element).closest('button')) {
+                return;
+            }
+            this.onKeyPress(event.key);
+        },
+        onScreenKey(event: MouseEvent): void {
+            const button = (event.target as Element).closest('button');
+            if (!button) {
+                return;
+            }
+            // Drop focus after a tap so a physical Enter submits instead of pressing this key again.
+            // Keyboard activation (detail 0) keeps focus for players moving through the keys with Tab.
+            if (event.detail > 0) {
+                button.blur();
+            }
+            this.onKeyPress(button.dataset.key!);
+        },
         onKeyPress(key: string): void {
             this.message = '';
             this.errors = false;
