@@ -124,6 +124,7 @@ test('five wrong guesses lose the game', function () {
 
     $page->assertSeeIn('.message', 'Ha ha, sucka!')
         ->assertNoJavaScriptErrors();
+    expect($page->script("getComputedStyle(document.querySelector('.message')).color"))->toBe('rgb(247, 247, 73)');
 });
 
 test('the page fits a phone screen without scrolling sideways', function (int $width) {
@@ -180,18 +181,18 @@ test('pressing Enter after sliding off an on-screen key submits the guess', func
 
 test('the message colour shows what happened', function () {
     $page = visit('/');
+    $messageColour = fn () => $page->script("getComputedStyle(document.querySelector('.message')).color");
 
     guess($page, 'abcde');
-    $page->assertAttributeContains('.message', 'class', 'invalid');
+    expect($messageColour())->toBe('rgb(255, 92, 92)');
 
     $page->keys('#game', array_fill(0, 5, 'Backspace'));
     guess($page, 'crane');
-    $page->assertAttributeDoesntContain('.message', 'class', 'invalid')
-        ->assertAttributeDoesntContain('.message', 'class', 'correct');
+    expect($messageColour())->toBe('rgb(247, 247, 73)');
 
     guess($page, 'tiger');
-    $page->assertAttributeContains('.message', 'class', 'correct')
-        ->assertNoJavaScriptErrors();
+    expect($messageColour())->toBe('rgb(71, 215, 71)');
+    $page->assertNoJavaScriptErrors();
 });
 
 test('the message sits beside the board on desktop', function () {

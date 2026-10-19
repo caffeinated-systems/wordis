@@ -128,6 +128,7 @@ output {
     --bubble-edge: #6ba0e2;
     position: absolute;
     z-index: 1;
+    pointer-events: none;
     top: 20px;
     left: calc(100% + 28px);
     width: max-content;
@@ -155,7 +156,7 @@ output::after {
 }
 
 output.invalid {
-    color: var(--invalid-color);
+    color: #ff5c5c;
     text-shadow: 0 0 12px rgba(246, 38, 38, 0.42);
 }
 
