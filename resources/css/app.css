@@ -83,8 +83,7 @@ h1 {
 }
 
 .key {
-    flex: 0 1 40px;
-    min-width: 0;
+    width: min(40px, 10% - 4px);
     padding: 0;
     background: #c5c5c5;
     border: 0;
@@ -94,7 +93,7 @@ h1 {
 }
 
 .key[data-key="Enter"], .key[data-key="Backspace"] {
-    flex-basis: 60px;
+    width: min(60px, 15% - 4px);
 }
 
 .row.invalid .tile, .tile.invalid {
@@ -146,10 +145,13 @@ output:empty {
 }
 
 @media (max-width: 640px) {
-    output {
+    output, output:empty {
+        display: block;
         position: static;
         width: auto;
-        margin: 0 0 1rem;
+        min-height: 1.5em;
+        line-height: 1.5;
+        margin: 0 0 .5rem;
         text-align: center;
     }
 }
