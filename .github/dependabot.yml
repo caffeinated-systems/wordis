@@ -6,7 +6,23 @@ updates:
       interval: "weekly"
     target-branch: "main"
     commit-message:
-      prefix: "composer"
+      prefix: "chore"
+      include: "scope"
+    groups:
+      production-minor-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+      development-minor-patch:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -14,7 +30,23 @@ updates:
       interval: "weekly"
     target-branch: "main"
     commit-message:
-      prefix: "npm"
+      prefix: "chore"
+      include: "scope"
+    groups:
+      production-minor-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+      development-minor-patch:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -22,4 +54,12 @@ updates:
       interval: "weekly"
     target-branch: "main"
     commit-message:
-      prefix: "github-actions"
+      prefix: "chore"
+      include: "scope"
+    groups:
+      github-actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
