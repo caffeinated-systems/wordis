@@ -101,6 +101,7 @@ h1 {
 }
 
 #keyboard {
+    margin: min(4rem, 5vh) 0;
     margin: min(4rem, 5dvh) 0;
     flex: none;
 }
