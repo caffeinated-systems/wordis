@@ -19,6 +19,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Answer Cache Store
+    |--------------------------------------------------------------------------
+    |
+    | The store that keeps today's answer until midnight. It is a per-instance
+    | file cache by default so reading the answer doesn't wake a database
+    | that scales to zero.
+    |
+    */
+
+    'answer_store' => env('ANSWER_CACHE_STORE', 'file'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |
