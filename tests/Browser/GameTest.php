@@ -53,7 +53,7 @@ test('a word that is not in the list is rejected', function () {
 
     guess($page, 'abcde');
 
-    $page->assertSeeIn('.message', 'Cheater, thats not a word...')
+    $page->assertSeeIn('.message', 'Not in word list')
         ->assertPresent('#game > .row.current.invalid');
     expect(tileStatuses($page, 0))->each->toBe('');
 });
@@ -138,7 +138,7 @@ test('the page fits a phone screen without scrolling sideways', function (int $w
     $boardTop = $page->script("document.querySelector('#game').getBoundingClientRect().top");
     $page->click('#keyboard [data-key="Enter"]');
 
-    $page->assertSeeIn('.message', 'Cheater, thats not a word...')
+    $page->assertSeeIn('.message', 'Not in word list')
         ->assertNoJavaScriptErrors();
     expect(rowLetters($page, 0))->toBe('pbcde')
         ->and($page->script('document.documentElement.scrollWidth'))->toBe($width)
