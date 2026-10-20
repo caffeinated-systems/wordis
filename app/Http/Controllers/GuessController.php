@@ -22,7 +22,7 @@ class GuessController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'guess' => ['bail', 'required', 'string', 'regex:/^[a-zA-Z]{5}$/', function (string $attribute, string $guess, Closure $fail): void {
+            'guess' => ['bail', 'required', 'string', 'regex:/^[a-zA-Z]{5}\z/', function (string $attribute, string $guess, Closure $fail): void {
                 if (! in_array(Str::upper($guess), self::dictionary(), true)) {
                     Log::info('Guess not in dictionary', ['guess' => Str::lower($guess)]);
                     $fail('Not in word list');

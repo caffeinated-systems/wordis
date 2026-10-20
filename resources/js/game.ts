@@ -76,7 +76,7 @@ export default function game() {
             }
         },
         onKeyPress(key: string): void {
-            if (this.checking) {
+            if (this.checking || this.state === 'complete') {
                 return;
             }
             this.message = '';

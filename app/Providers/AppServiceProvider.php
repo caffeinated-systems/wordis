@@ -22,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('guesses', fn (Request $request): Limit => Limit::perMinute(60)->by($request->ip()));
+        // Laravel Cloud is only reachable through Cloudflare, which sets CF-Connecting-IP to the player's address.
+        RateLimiter::for('guesses', fn (Request $request): Limit => Limit::perMinute(60)
+            ->by($request->header('CF-Connecting-IP') ?? $request->ip()));
     }
 }
