@@ -53,11 +53,11 @@ export default function game() {
             hot: [
                 'So close, and still wrong',
                 'Oh, nearly',
-                'Ooh, warmer',
+                'Ooh, hot',
                 'You can almost taste it',
                 "Don't blow it now",
             ],
-        } as Record<Heat, string[]>,
+        } satisfies Record<Heat, string[]>,
         // The win message for each guess number, first guess first.
         wins: [
             'Lucky',

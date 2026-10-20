@@ -115,6 +115,7 @@ test('guessing the word with the physical keyboard wins', function () {
 
 test('a wrong guess gets a diss that matches how close it was', function (string $word, string $heat) {
     $page = visit('/');
+    $page->script('Math.random = () => 0');
 
     guess($page, $word);
 
@@ -130,7 +131,8 @@ test('a later win gets its own message', function () {
     guess($page, 'crane');
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Show-off');
+    $page->assertSeeIn('.message', 'Show-off')
+        ->assertNoJavaScriptErrors();
 });
 
 test('guessing the word with the on-screen keyboard wins', function () {
