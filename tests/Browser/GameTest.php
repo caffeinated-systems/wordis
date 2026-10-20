@@ -1,5 +1,11 @@
 <?php
 
+use App\Models\Answer;
+
+beforeEach(function () {
+    Answer::factory()->today()->create(['word' => 'tiger']);
+});
+
 test('the page loads without console errors', function () {
     visit('/')->assertNoSmoke();
 });
