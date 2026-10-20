@@ -44,7 +44,7 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress
 
       - name: Type coverage
-        run: vendor/bin/pest --type-coverage --min=95
+        run: vendor/bin/pest --type-coverage --min=100
 
       - name: Prepare environment
         run: |
@@ -75,7 +75,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run tests
-        run: vendor/bin/pest --ci --parallel --trace --coverage --min=95
+        run: vendor/bin/pest --ci --parallel --trace --coverage --min=100
 
       - name: Upload screenshots and traces
         uses: actions/upload-artifact@v7
