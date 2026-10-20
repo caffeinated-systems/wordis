@@ -108,9 +108,29 @@ test('guessing the word with the physical keyboard wins', function () {
 
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Alright, you win')
+    $page->assertSeeIn('.message', 'Lucky')
         ->assertNoJavaScriptErrors();
     expect(tileStatuses($page, 0))->each->toBe('correct');
+});
+
+test('a wrong guess gets a diss that matches how close it was', function (string $word, string $heat) {
+    $page = visit('/');
+
+    guess($page, $word);
+
+    expect($page->script("Alpine.\$data(document.querySelector('main')).disses.{$heat}.includes(document.querySelector('.message').textContent)"))->toBeTrue();
+})->with([
+    'nothing right is cold' => ['plush', 'cold'],
+    'four letters in place is hot' => ['timer', 'hot'],
+]);
+
+test('a later win gets its own message', function () {
+    $page = visit('/');
+
+    guess($page, 'crane');
+    guess($page, 'tiger');
+
+    $page->assertSeeIn('.message', 'Show-off');
 });
 
 test('guessing the word with the on-screen keyboard wins', function () {
@@ -121,7 +141,7 @@ test('guessing the word with the on-screen keyboard wins', function () {
     }
     settle($page);
 
-    $page->assertSeeIn('.message', 'Alright, you win');
+    $page->assertSeeIn('.message', 'Lucky');
     expect(tileStatuses($page, 0))->each->toBe('correct');
 });
 
@@ -176,7 +196,7 @@ test('pressing Enter after tapping an on-screen key submits the guess', function
     }
     guess($page, 'r');
 
-    $page->assertSeeIn('.message', 'Alright, you win')
+    $page->assertSeeIn('.message', 'Lucky')
         ->assertNoJavaScriptErrors();
 });
 
@@ -199,7 +219,7 @@ test('pressing Enter after sliding off an on-screen key submits the guess', func
     $page->drag('#keyboard [data-key="Backspace"]', '#game');
     guess($page, 'r');
 
-    $page->assertSeeIn('.message', 'Alright, you win')
+    $page->assertSeeIn('.message', 'Lucky')
         ->assertNoJavaScriptErrors();
 });
 

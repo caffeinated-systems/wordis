@@ -3,6 +3,14 @@ import Tile, { TileStatus } from './Tile';
 
 export type GameState = 'active' | 'complete';
 
+type Heat = 'cold' | 'warm' | 'hot';
+
+export function heat(statuses: TileStatus[]): Heat {
+    const score = statuses.reduce((total, status) => total + (status === 'correct' ? 2 : status === 'present' ? 1 : 0), 0);
+
+    return score <= 2 ? 'cold' : score <= 6 ? 'warm' : 'hot';
+}
+
 type GuessResult = {
     statuses: TileStatus[];
     answer?: string;
@@ -26,14 +34,37 @@ export default function game() {
             "ASDFGHJKL".split(""),
             ['Enter', ..."ZXCVBNM".split(""), 'Backspace'],
         ],
-        disses: [
-            'Nope',
-            'Wrong',
-            'Not even close',
-            'Stupid failure',
-            'You are kidding, right?',
-            'You are a loser',
-            'Are you even trying?',
+        // A wrong guess scores 2 per correct tile and 1 per present tile; the closer it is, the gentler the diss.
+        disses: {
+            cold: [
+                'Are you even trying?',
+                'Not even close',
+                'Did you sneeze on the keyboard?',
+                'That was painful to watch',
+                'Bold choice. Wrong, but bold',
+            ],
+            warm: [
+                'Nope',
+                'Wrong',
+                'Meh',
+                'Getting somewhere, slowly',
+                'Lukewarm at best',
+            ],
+            hot: [
+                'So close, and still wrong',
+                'Oh, nearly',
+                'Ooh, warmer',
+                'You can almost taste it',
+                "Don't blow it now",
+            ],
+        } as Record<Heat, string[]>,
+        // The win message for each guess number, first guess first.
+        wins: [
+            'Lucky',
+            'Show-off',
+            'Not bad, I suppose',
+            'Took your time',
+            'Finally',
         ],
         get currentRow(): Tile[] {
             return this.board[this.currentRowIndex];
@@ -141,7 +172,7 @@ export default function game() {
             if (statuses.every((status) => status === 'correct')) {
                 this.state = 'complete';
                 this.won = true;
-                this.message = 'Alright, you win';
+                this.message = this.wins[this.currentRowIndex];
                 confetti();
             } else if (this.remainingGuesses === 0) {
                 this.state = 'complete';
@@ -149,7 +180,8 @@ export default function game() {
                 this.message = `Ha ha, sucka! It was ${this.answer.toUpperCase()}`;
             } else {
                 this.currentRowIndex++;
-                this.message = this.disses[Math.floor(Math.random() * this.disses.length)];
+                const disses = this.disses[heat(statuses)];
+                this.message = disses[Math.floor(Math.random() * disses.length)];
             }
         },
     };
