@@ -19,8 +19,21 @@ body {
     font-family: Poppins, sans-serif;
 }
 
+/* The page is one screen tall; the board takes what's left after the logo and keyboard, between 50px and 100px a row.
+   Below 50px rows the page scrolls instead. */
 main {
     width: min(440px, 100vw - 2rem);
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Spacers centre the page vertically but shrink to nothing first, so overflow never goes above the top edge */
+main::before,
+main::after {
+    content: '';
+    flex: 1;
 }
 
 h1 {
@@ -35,7 +48,11 @@ h1 {
     position: relative;
     border-radius: 20px;
     width: min(400px, 100%);
-    margin: auto;
+    margin: 0 auto;
+    flex: 0 1 500px;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
 }
 
 #game:before {
@@ -53,6 +70,12 @@ h1 {
     justify-content: center;
 }
 
+#game > .row {
+    flex: 1;
+    min-height: 0;
+    container-type: size;
+}
+
 .row.current .tile:empty:first-of-type {
     animation: fade 2s;
     animation-fill-mode: both;
@@ -68,18 +91,19 @@ h1 {
 .tile {
     outline: 1px solid rgba(73, 110, 158, 0.1);
     width: 100%;
-    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 50px;
+    font-size: min(50px, 50cqh);
     font-weight: 600;
     text-transform: uppercase;
     color: #496e9e;
 }
 
 #keyboard {
-    margin: 4rem 0;
+    margin: min(4rem, 5vh) 0;
+    margin: min(4rem, 5dvh) 0;
+    flex: none;
 }
 
 .key {
@@ -204,7 +228,7 @@ output:empty {
     }
 
     #keyboard {
-        margin-top: 4.75rem;
+        margin: 4.75rem 0 1rem;
     }
 }
 

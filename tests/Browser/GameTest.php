@@ -201,6 +201,44 @@ test('the page fits a phone screen without scrolling sideways', function (int $w
         ->and($page->script("document.querySelector('#game').getBoundingClientRect().top"))->toBe($boardTop);
 })->with([320, 360, 390]);
 
+test('the board and keyboard fit on a phone screen without scrolling', function (int $width, int $height) {
+    $page = visit('/');
+    $page->resize($width, $height);
+
+    expect($page->script("document.querySelector('#keyboard').getBoundingClientRect().bottom"))->toBeLessThanOrEqual($height)
+        ->and($page->script('document.documentElement.scrollHeight'))->toBeLessThanOrEqual($height)
+        ->and($page->script("document.querySelector('#wordis-logo').getBoundingClientRect().top"))->toBeGreaterThanOrEqual(0)
+        ->and($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(50);
+})->with([
+    'small phone' => [360, 640],
+    'large phone' => [390, 844],
+]);
+
+test('a screen too short for the board scrolls instead of squashing it', function () {
+    $page = visit('/');
+    $page->resize(640, 360);
+
+    expect($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(50)
+        ->and($page->script("document.querySelector('#wordis-logo').getBoundingClientRect().top"))->toBeGreaterThanOrEqual(0)
+        ->and($page->script('document.documentElement.scrollHeight'))
+        ->toBeGreaterThanOrEqual($page->script("Math.floor(document.querySelector('#keyboard').getBoundingClientRect().bottom)"));
+});
+
+test('a laptop screen keeps the board readable', function () {
+    $page = visit('/');
+    $page->resize(1366, 650);
+
+    expect($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(60)
+        ->and($page->script("document.querySelector('#keyboard').getBoundingClientRect().bottom"))->toBeLessThanOrEqual(650);
+});
+
+test('tiles keep their full size on a tall desktop screen', function () {
+    $page = visit('/');
+    $page->resize(1280, 1080);
+
+    expect($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBe(100);
+});
+
 test('pressing Enter after tapping an on-screen key submits the guess', function () {
     $page = visit('/');
 
