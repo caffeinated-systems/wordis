@@ -201,6 +201,25 @@ test('the page fits a phone screen without scrolling sideways', function (int $w
         ->and($page->script("document.querySelector('#game').getBoundingClientRect().top"))->toBe($boardTop);
 })->with([320, 360, 390]);
 
+test('the board and keyboard fit on a phone screen without scrolling', function (int $width, int $height) {
+    $page = visit('/');
+    $page->resize($width, $height);
+
+    expect($page->script("document.querySelector('#keyboard').getBoundingClientRect().bottom"))->toBeLessThanOrEqual($height)
+        ->and($page->script('document.documentElement.scrollHeight'))->toBeLessThanOrEqual($height)
+        ->and($page->script("document.querySelector('#game').getBoundingClientRect().top"))->toBeGreaterThanOrEqual(0);
+})->with([
+    'small phone' => [360, 640],
+    'large phone' => [390, 844],
+]);
+
+test('tiles keep their full size on a tall desktop screen', function () {
+    $page = visit('/');
+    $page->resize(1280, 1080);
+
+    expect($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBe(100);
+});
+
 test('pressing Enter after tapping an on-screen key submits the guess', function () {
     $page = visit('/');
 
