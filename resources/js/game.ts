@@ -1,17 +1,23 @@
 import confetti from 'canvas-confetti';
-import Tile from './Tile';
-import words from '../words/dictionary.json';
-
-const dictionary: ReadonlySet<string> = new Set(words);
+import Tile, { TileStatus } from './Tile';
 
 export type GameState = 'active' | 'complete';
 
-export default function game(answer: string) {
+type GuessResult = {
+    statuses: TileStatus[];
+    answer?: string;
+};
+
+export default function game() {
     return {
         guessesAllowed: 5,
-        answer,
+        wordLength: 5,
+        answer: '',
         currentRowIndex: 0,
         state: 'active' as GameState,
+        won: false,
+        checking: false,
+        pending: Promise.resolve(),
         errors: false,
         message: '',
         board: [] as Tile[][],
@@ -40,7 +46,7 @@ export default function game(answer: string) {
         },
         init(): void {
             this.board = Array.from({ length: this.guessesAllowed }, () => {
-                return Array.from({ length: this.answer.length }, (item, index) => new Tile(index));
+                return Array.from({ length: this.wordLength }, (item, index) => new Tile(index));
             });
         },
         matchingTileForKey(key: string): Tile | undefined {
@@ -70,6 +76,9 @@ export default function game(answer: string) {
             }
         },
         onKeyPress(key: string): void {
+            if (this.checking) {
+                return;
+            }
             this.message = '';
             this.errors = false;
             if(/^[a-z]$/i.test(key)) {
@@ -97,25 +106,47 @@ export default function game(answer: string) {
             }
         },
 
-        checkWord(): void
-        {
-            if(this.currentGuess.length < this.answer.length) {
+        checkWord(): void {
+            if (this.currentGuess.length < this.wordLength) {
                 return;
             }
-            if (!dictionary.has(this.currentGuess.toUpperCase())) {
+            this.pending = this.submitGuess();
+        },
+        async submitGuess(): Promise<void> {
+            this.checking = true;
+            try {
+                const response = await fetch('/guesses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    body: JSON.stringify({ guess: this.currentGuess, attempt: this.currentRowIndex + 1 }),
+                });
+                if (!response.ok) {
+                    this.errors = true;
+                    this.message = response.status === 422 ? 'Not in word list'
+                        : response.status === 429 ? 'Slow down a bit'
+                        : 'Something went wrong, try again';
+                    return;
+                }
+                this.applyResult(await response.json());
+            } catch {
                 this.errors = true;
-                this.message = 'Not in word list';
-                return;
+                this.message = 'Something went wrong, try again';
+            } finally {
+                this.checking = false;
             }
-            Tile.updateStatusForRow(this.currentRow, this.answer);
+        },
+        applyResult({ statuses, answer }: GuessResult): void {
+            this.currentRow.forEach((tile, index) => tile.status = statuses[index]);
 
-            if(this.currentGuess === this.answer) {
+            if (statuses.every((status) => status === 'correct')) {
                 this.state = 'complete';
+                this.won = true;
                 this.message = 'Alright, you win';
                 confetti();
             } else if (this.remainingGuesses === 0) {
                 this.state = 'complete';
-                this.message = 'Ha ha, sucka!';
+                this.answer = answer ?? '';
+                this.message = `Ha ha, sucka! It was ${this.answer.toUpperCase()}`;
             } else {
                 this.currentRowIndex++;
                 this.message = this.disses[Math.floor(Math.random() * this.disses.length)];

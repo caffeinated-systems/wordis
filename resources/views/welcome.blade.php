@@ -10,14 +10,14 @@
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
     </head>
     <body>
-        <main  x-data="game(@js($answer))" @keyup.window="onPhysicalKey($event)" >
+        <main  x-data="game()" @keyup.window="onPhysicalKey($event)" >
             <header>
                 <h1 aria-label="Wordis">
                     <img id="wordis-logo" src='/assets/wordis-logo.svg' alt='Wordis' width="4460" height="995" />
                 </h1>
             </header>
             <div id="game">
-                <output class="message" :class="{ 'invalid': errors, 'correct': state === 'complete' && currentGuess === answer }" x-text="message"></output>
+                <output class="message" :class="{ 'invalid': errors, 'correct': won }" x-text="message"></output>
                 <template x-for="(row, index) in board">
                     <div class="row" :class="{ 'current': currentRowIndex === index, 'invalid': currentRowIndex === index && errors}">
                         <template x-for="tile in row">
