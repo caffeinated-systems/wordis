@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Answer;
 use Illuminate\Support\Facades\Log;
 
