@@ -18,7 +18,7 @@ class AnswerFactory extends Factory
     public function definition(): array
     {
         return [
-            'date' => fake()->unique()->date(),
+            'date' => fake()->unique()->dateTimeBetween('-10 years', '-1 day')->format('Y-m-d'),
             'word' => fake()->unique()->randomElement(Answer::pool()),
         ];
     }

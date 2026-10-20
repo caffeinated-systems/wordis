@@ -2,6 +2,7 @@
 
 use App\Models\Answer;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\assertDatabaseHas;
@@ -15,8 +16,13 @@ test('the first visit of the day stores a word from the answer pool', function (
     assertDatabaseHas('answers', ['date' => today()->toDateString(), 'word' => $word]);
 });
 
-test('later visits on the same day get the same answer', function () {
+test('later visits on the same day get the same answer without reading the database', function () {
     $word = Answer::today();
+
+    DB::enableQueryLog();
+    expect(Answer::today())->toBe($word)
+        ->and(DB::getQueryLog())->toBeEmpty();
+
     Cache::flush();
 
     expect(Answer::today())->toBe($word);
