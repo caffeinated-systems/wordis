@@ -16,27 +16,4 @@ export default class Tile {
     empty(): void {
         this.letter = '';
     }
-
-    static updateStatusForRow(row: Tile[], answer: string): void {
-        let remainingLetters = answer.split('');
-
-        for (let tile of row) {
-            tile.status = tile.letter === answer[tile.position] ? 'correct' : '';
-
-            if (tile.status === 'correct') {
-                remainingLetters.splice(remainingLetters.indexOf(tile.letter), 1);
-            }
-        }
-
-        for (let tile of row.filter((tile) => tile.status !== 'correct')) {
-            let index = remainingLetters.indexOf(tile.letter);
-
-            if (index === -1) {
-                tile.status = 'absent';
-            } else {
-                tile.status = 'present';
-                remainingLetters.splice(index, 1);
-            }
-        }
-    }
 }

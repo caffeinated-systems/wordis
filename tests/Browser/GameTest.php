@@ -117,6 +117,7 @@ test('guessing the word with the on-screen keyboard wins', function () {
     foreach (['T', 'I', 'G', 'E', 'R', 'Enter'] as $key) {
         $page->click("#keyboard [data-key=\"{$key}\"]");
     }
+    settle($page);
 
     $page->assertSeeIn('.message', 'Alright, you win');
     expect(tileStatuses($page, 0))->each->toBe('correct');
@@ -129,9 +130,22 @@ test('five wrong guesses lose the game', function () {
         guess($page, $word);
     }
 
-    $page->assertSeeIn('.message', 'Ha ha, sucka!')
+    $page->assertSeeIn('.message', 'Ha ha, sucka! It was TIGER')
         ->assertNoJavaScriptErrors();
     expect($page->script("getComputedStyle(document.querySelector('.message')).color"))->toBe('rgb(247, 247, 73)');
+});
+
+test('a lost game cannot be replayed into a win', function () {
+    $page = visit('/');
+
+    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $word) {
+        guess($page, $word);
+    }
+    $page->keys('#game', array_fill(0, 5, 'Backspace'));
+    guess($page, 'tiger');
+
+    $page->assertSeeIn('.message', 'Ha ha, sucka! It was TIGER');
+    expect(rowLetters($page, 4))->toBe('teeth');
 });
 
 test('the page fits a phone screen without scrolling sideways', function (int $width) {
@@ -143,6 +157,7 @@ test('the page fits a phone screen without scrolling sideways', function (int $w
     }
     $boardTop = $page->script("document.querySelector('#game').getBoundingClientRect().top");
     $page->click('#keyboard [data-key="Enter"]');
+    settle($page);
 
     $page->assertSeeIn('.message', 'Not in word list')
         ->assertNoJavaScriptErrors();

@@ -36,6 +36,15 @@ pest()->extend(TestCase::class)
 function guess(PendingAwaitablePage $page, string $word): void
 {
     $page->keys('#game', [...str_split($word), 'Enter']);
+    settle($page);
+}
+
+/**
+ * Wait until the guess sent to the server has been scored.
+ */
+function settle(PendingAwaitablePage $page): void
+{
+    $page->script("Alpine.\$data(document.querySelector('main')).pending");
 }
 
 /**

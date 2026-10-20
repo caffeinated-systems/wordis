@@ -1,8 +1,11 @@
 <?php
 
-use App\Models\Answer;
+use App\Http\Controllers\GuessController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome', ['answer' => Answer::today()]);
-});
+Route::view('/', 'welcome');
+
+// Scoring a guess changes nothing, so it skips sessions and CSRF and doesn't wake the database for a session.
+Route::post('/guesses', GuessController::class)
+    ->withoutMiddleware('web')
+    ->middleware('throttle:guesses');

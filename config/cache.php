@@ -32,6 +32,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Rate Limiter Cache Store
+    |--------------------------------------------------------------------------
+    |
+    | Rate limit counts live in a per-instance file cache so limiting guesses
+    | doesn't wake a database that scales to zero.
+    |
+    */
+
+    'limiter' => env('CACHE_LIMITER', 'file'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |
