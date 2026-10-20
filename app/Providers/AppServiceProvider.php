@@ -22,9 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // ponytail: Laravel Cloud is only reachable through Cloudflare, which sets CF-Connecting-IP to the player's
-        // address. On a host reachable without Cloudflare, clients could set it themselves; trust proxies there instead.
-        RateLimiter::for('guesses', fn (Request $request): Limit => Limit::perMinute(60)
-            ->by($request->header('CF-Connecting-IP') ?? $request->ip()));
+        // Laravel Cloud already passes the player's real IP through Cloudflare, so no trusted proxies are needed.
+        RateLimiter::for('guesses', fn (Request $request): Limit => Limit::perMinute(60)->by($request->ip()));
     }
 }
