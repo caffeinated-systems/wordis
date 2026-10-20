@@ -102,7 +102,7 @@ export default function game(answer: string) {
             }
             if (!dictionary.has(this.currentGuess.toUpperCase())) {
                 this.errors = true;
-                this.message = "Not in word list";
+                this.message = 'Not in word list';
                 return;
             }
             Tile.updateStatusForRow(this.currentRow, this.answer);
