@@ -56,6 +56,15 @@ test('guessing is limited to 60 a minute', function () {
     postJson('/guesses', ['guess' => 'crane', 'attempt' => 1])->assertTooManyRequests();
 });
 
+test('the rate limit counts each player behind Cloudflare separately', function () {
+    foreach (range(1, 60) as $request) {
+        postJson('/guesses', ['guess' => 'crane', 'attempt' => 1], ['CF-Connecting-IP' => '203.0.113.1'])->assertOk();
+    }
+
+    postJson('/guesses', ['guess' => 'crane', 'attempt' => 1], ['CF-Connecting-IP' => '203.0.113.1'])->assertTooManyRequests();
+    postJson('/guesses', ['guess' => 'crane', 'attempt' => 1], ['CF-Connecting-IP' => '203.0.113.2'])->assertOk();
+});
+
 test('a guess starts no session', function () {
     postJson('/guesses', ['guess' => 'crane', 'attempt' => 1])
         ->assertOk()
