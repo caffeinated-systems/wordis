@@ -2,6 +2,11 @@
 
 # Wordis
 
+[![Tests](https://github.com/caffeinated-systems/wordis/actions/workflows/tests.yml/badge.svg)](https://github.com/caffeinated-systems/wordis/actions/workflows/tests.yml)
+![Coverage ≥ 95%](https://img.shields.io/badge/coverage-%E2%89%A595%25-brightgreen)
+![Type coverage ≥ 95%](https://img.shields.io/badge/type%20coverage-%E2%89%A595%25-brightgreen)
+![PHPStan level max](https://img.shields.io/badge/PHPStan-level%20max-brightgreen)
+
 A Wordle clone. You get five guesses to find a five-letter word, and the game taunts you every time you miss.
 
 ## How to play

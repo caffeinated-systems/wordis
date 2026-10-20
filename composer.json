@@ -12,6 +12,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.13",
         "laravel/boost": "^2.10",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
@@ -20,7 +21,8 @@
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^5.3",
         "pestphp/pest-plugin-browser": "^5.1",
-        "pestphp/pest-plugin-laravel": "^5.0"
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "pestphp/pest-plugin-type-coverage": "^5.0"
     },
     "autoload": {
         "psr-4": {

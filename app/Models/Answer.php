@@ -8,8 +8,8 @@ use Database\Factories\AnswerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -28,9 +28,9 @@ class Answer extends Model
     {
         $date = today()->toDateString();
 
-        return Cache::store(config('cache.answer_store'))->remember("answer:{$date}", today()->addDay(), fn (): string => static::firstOrCreate(
+        return Cache::store(config()->string('cache.answer_store'))->remember("answer:{$date}", today()->addDay(), fn (): string => static::firstOrCreate(
             ['date' => $date],
-            fn (): array => ['word' => static::randomUnusedWord()],
+            fn (): array => ['word' => self::randomUnusedWord()],
         )->word);
     }
 
@@ -41,18 +41,18 @@ class Answer extends Model
      */
     public static function pool(): array
     {
-        $words = json_decode(file_get_contents(resource_path('words/answer-pool.json')), true, flags: JSON_THROW_ON_ERROR);
+        $words = File::json(resource_path('words/answer-pool.json'), JSON_THROW_ON_ERROR);
 
-        return array_map(Str::lower(...), $words);
+        return array_values(array_map(Str::lower(...), array_filter($words, is_string(...))));
     }
 
     private static function randomUnusedWord(): string
     {
-        $unused = array_diff(static::pool(), static::pluck('word')->all());
+        $unused = array_diff(static::pool(), array_filter(static::pluck('word')->all(), is_string(...)));
 
         // ponytail: ~2,200 words lasts about six years; grow the pool before it runs out.
         throw_if($unused === [], RuntimeException::class, 'The answer pool has no unused words left.');
 
-        return Arr::random($unused);
+        return $unused[array_rand($unused)];
     }
 }
