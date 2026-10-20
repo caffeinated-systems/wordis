@@ -1,6 +1,8 @@
 import confetti from 'canvas-confetti';
 import Tile from './Tile';
-import { dictionary } from './dictionary';
+import words from '../words/dictionary.json';
+
+const dictionary: ReadonlySet<string> = new Set(words);
 
 export type GameState = 'active' | 'complete';
 
