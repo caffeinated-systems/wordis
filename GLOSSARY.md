@@ -21,13 +21,13 @@ The curated common words eligible to become an answer. Every word in the answer 
 _Avoid_: answer list, candidates
 
 **Game**:
-One player's play of one day's answer: up to five guesses, ending won or lost. A game belongs to the answer it started on, even past midnight; one not won or lost by the time the player's next game starts stays unfinished. A player with an account has one game per answer.
+One player's play of one day's answer, of up to five guesses. It ends won or lost, or is left unfinished when the player's next game starts first.
 _Avoid_: round, session
 
 **Guest**:
-A player who plays without signing in. A guest's game is tied to the browser they play in and is lost if they clear its cookies. Signing in moves it to their account, unless the account already has a game for that answer.
+A player who plays without signing in. Their game is kept only in the browser they play in.
 _Avoid_: anonymous user, visitor
 
 **Account**:
-What a player gets by signing in. It keeps their games, on every device they sign in on.
-_Avoid_: user, profile, login
+What a player registers for and signs in to. It keeps their games across devices.
+_Avoid_: profile, login

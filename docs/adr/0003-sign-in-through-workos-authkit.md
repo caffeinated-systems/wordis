@@ -9,6 +9,6 @@ Signing in is optional and exists so a player's games are kept on an account. We
 ## Consequences
 
 - Signing in and registering happen on WorkOS's hosted page.
-- While WorkOS is down, nobody can sign in, and a signed-in player whose short-lived access token expires is signed out on their next request through the WorkOS session middleware: the package invalidates the whole session when the refresh fails. Guests keep playing, so an account's game must be saved before the session is the only place it lives.
-- How long a player stays signed in is set in two places: Laravel's `SESSION_LIFETIME` and the session length in the WorkOS dashboard. Both need raising to keep players signed in for 30 days.
+- Whenever a WorkOS refresh fails (an outage, a revoked session, or the session reaching its maximum length), the package's session middleware signs the player out, wipes the whole session and redirects to `/`. Guests keep playing. An account's game must never live only in the session, and a JSON route behind that middleware gets a redirect instead of JSON.
+- How long a player stays signed in is set in two places: Laravel's `SESSION_LIFETIME` and the session length in the WorkOS dashboard. Both are set to 30 days.
 - Accounts are matched by `workos_id`, and we store no passwords. Moving off WorkOS later means migrating every account.
