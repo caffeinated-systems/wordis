@@ -221,7 +221,7 @@ test('a screen too short for the board scrolls instead of squashing it', functio
     expect($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(50)
         ->and($page->script("document.querySelector('#wordis-logo').getBoundingClientRect().top"))->toBeGreaterThanOrEqual(0)
         ->and($page->script('document.documentElement.scrollHeight'))
-        ->toBeGreaterThanOrEqual($page->script("document.querySelector('#keyboard').getBoundingClientRect().bottom"));
+        ->toBeGreaterThanOrEqual($page->script("Math.floor(document.querySelector('#keyboard').getBoundingClientRect().bottom)"));
 });
 
 test('a laptop screen keeps the board readable', function () {
