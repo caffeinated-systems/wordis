@@ -16,6 +16,10 @@
         <include>
             <directory>app</directory>
         </include>
+        <exclude>
+            <!-- Unused until players can log in; drop this once it's used. -->
+            <file>app/Models/User.php</file>
+        </exclude>
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>

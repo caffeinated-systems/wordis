@@ -8,6 +8,7 @@ use App\Models\Answer;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -16,14 +17,14 @@ class GuessController extends Controller
     /**
      * Guesses a player gets before the answer is revealed. The game in resources/js/game.ts allows the same number.
      */
-    public const GUESSES_ALLOWED = 5;
+    public const int GUESSES_ALLOWED = 5;
 
     /**
      * Score a guess against today's answer, revealing the answer when the last guess misses.
      */
     public function __invoke(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $request->validate([
             'guess' => ['bail', 'required', 'string', 'regex:/^[a-zA-Z]{5}\z/', function (string $attribute, string $guess, Closure $fail): void {
                 if (! in_array(Str::upper($guess), self::dictionary(), true)) {
                     Log::info('Guess not in dictionary', ['guess' => Str::lower($guess)]);
@@ -33,9 +34,9 @@ class GuessController extends Controller
             'attempt' => ['required', 'integer', 'between:1,'.self::GUESSES_ALLOWED],
         ]);
 
-        $guess = Str::lower($validated['guess']);
+        $guess = $request->string('guess')->lower()->value();
         $answer = Answer::today();
-        $lost = $guess !== $answer && (int) $validated['attempt'] === self::GUESSES_ALLOWED;
+        $lost = $guess !== $answer && $request->integer('attempt') === self::GUESSES_ALLOWED;
 
         return response()->json([
             'statuses' => self::score($guess, $answer),
@@ -70,7 +71,7 @@ class GuessController extends Controller
             }
         }
 
-        return $statuses;
+        return array_values($statuses);
     }
 
     /**
@@ -78,6 +79,6 @@ class GuessController extends Controller
      */
     private static function dictionary(): array
     {
-        return json_decode(file_get_contents(resource_path('words/dictionary.json')), true, flags: JSON_THROW_ON_ERROR);
+        return array_values(array_filter(File::json(resource_path('words/dictionary.json'), JSON_THROW_ON_ERROR), is_string(...)));
     }
 }
