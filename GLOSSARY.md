@@ -19,3 +19,15 @@ _Avoid_: word list, valid words
 **Answer pool**:
 The curated common words eligible to become an answer. Every word in the answer pool is in the dictionary, and each day's answer is a word from the pool that has not been an answer before.
 _Avoid_: answer list, candidates
+
+**Game**:
+One player's play of one day's answer, of up to five guesses. It ends won or lost, or is left unfinished when the player's next game starts first.
+_Avoid_: round, session
+
+**Guest**:
+A player who plays without signing in. Their game is kept only in the browser they play in.
+_Avoid_: anonymous user, visitor
+
+**Account**:
+What a player registers for and signs in to. It keeps their games across devices.
+_Avoid_: profile, login
