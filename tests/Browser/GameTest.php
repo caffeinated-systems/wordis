@@ -172,6 +172,17 @@ test('a lost game cannot be replayed into a win', function () {
     expect(rowLetters($page, 4))->toBe('teeth');
 });
 
+test('a won game ignores further keys', function () {
+    $page = visit('/');
+
+    guess($page, 'tiger');
+    $page->keys('#game', ['Backspace']);
+    guess($page, 'x');
+
+    $page->assertSeeIn('.message', 'Lucky');
+    expect(rowLetters($page, 0))->toBe('tiger');
+});
+
 test('the page fits a phone screen without scrolling sideways', function (int $width) {
     $page = visit('/');
     $page->resize($width, 800);
