@@ -23,7 +23,7 @@ test('later visits on the same day get the same answer without reading the datab
     expect(Answer::today())->toBe($word)
         ->and(DB::getQueryLog())->toBeEmpty();
 
-    Cache::flush();
+    Cache::store(config('cache.answer_store'))->flush();
 
     expect(Answer::today())->toBe($word);
     assertDatabaseCount('answers', 1);

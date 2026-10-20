@@ -26,7 +26,7 @@ class Answer extends Model
     {
         $date = today()->toDateString();
 
-        return Cache::remember("answer:{$date}", today()->addDay(), fn (): string => static::firstOrCreate(
+        return Cache::store(config('cache.answer_store'))->remember("answer:{$date}", today()->addDay(), fn (): string => static::firstOrCreate(
             ['date' => $date],
             fn (): array => ['word' => static::randomUnusedWord()],
         )->word);
