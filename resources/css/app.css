@@ -19,13 +19,21 @@ body {
     font-family: Poppins, sans-serif;
 }
 
-/* The page is one screen tall; the board takes what's left after the logo and keyboard, up to 100px a row */
+/* The page is one screen tall; the board takes what's left after the logo and keyboard, between 50px and 100px a row.
+   Below 50px rows the page scrolls instead. */
 main {
     width: min(440px, 100vw - 2rem);
+    height: 100vh;
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+}
+
+/* Spacers centre the page vertically but shrink to nothing first, so overflow never goes above the top edge */
+main::before,
+main::after {
+    content: '';
+    flex: 1;
 }
 
 h1 {
@@ -42,7 +50,7 @@ h1 {
     width: min(400px, 100%);
     margin: 0 auto;
     flex: 0 1 500px;
-    min-height: 0;
+    min-height: 250px;
     display: flex;
     flex-direction: column;
 }
@@ -93,7 +101,7 @@ h1 {
 }
 
 #keyboard {
-    margin: 4rem 0;
+    margin: min(4rem, 5dvh) 0;
     flex: none;
 }
 

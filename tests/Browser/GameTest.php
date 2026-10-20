@@ -207,11 +207,29 @@ test('the board and keyboard fit on a phone screen without scrolling', function 
 
     expect($page->script("document.querySelector('#keyboard').getBoundingClientRect().bottom"))->toBeLessThanOrEqual($height)
         ->and($page->script('document.documentElement.scrollHeight'))->toBeLessThanOrEqual($height)
-        ->and($page->script("document.querySelector('#game').getBoundingClientRect().top"))->toBeGreaterThanOrEqual(0);
+        ->and($page->script("document.querySelector('#wordis-logo').getBoundingClientRect().top"))->toBeGreaterThanOrEqual(0)
+        ->and($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(50);
 })->with([
     'small phone' => [360, 640],
     'large phone' => [390, 844],
 ]);
+
+test('a screen too short for the board scrolls instead of squashing it', function () {
+    $page = visit('/');
+    $page->resize(640, 360);
+
+    expect($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(50)
+        ->and($page->script("document.querySelector('#wordis-logo').getBoundingClientRect().top"))->toBeGreaterThanOrEqual(0)
+        ->and($page->script('document.documentElement.scrollHeight'))->toBeGreaterThan(360);
+});
+
+test('a laptop screen keeps the board readable', function () {
+    $page = visit('/');
+    $page->resize(1366, 650);
+
+    expect($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(60)
+        ->and($page->script("document.querySelector('#keyboard').getBoundingClientRect().bottom"))->toBeLessThanOrEqual(650);
+});
 
 test('tiles keep their full size on a tall desktop screen', function () {
     $page = visit('/');
