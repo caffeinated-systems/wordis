@@ -135,16 +135,17 @@ test('five wrong guesses lose the game', function () {
     expect($page->script("getComputedStyle(document.querySelector('.message')).color"))->toBe('rgb(247, 247, 73)');
 });
 
-test('keys do nothing once the game is over', function () {
+test('a lost game cannot be replayed into a win', function () {
     $page = visit('/');
 
+    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $word) {
+        guess($page, $word);
+    }
+    $page->keys('#game', array_fill(0, 5, 'Backspace'));
     guess($page, 'tiger');
-    $page->keys('#game', ['Backspace']);
-    guess($page, 'r');
 
-    $page->assertSeeIn('.message', 'Alright, you win')
-        ->assertCount('#game > .row:nth-of-type(2) .tile:empty', 5);
-    expect(rowLetters($page, 0))->toBe('tiger');
+    $page->assertSeeIn('.message', 'Ha ha, sucka! It was TIGER');
+    expect(rowLetters($page, 4))->toBe('teeth');
 });
 
 test('the page fits a phone screen without scrolling sideways', function (int $width) {
