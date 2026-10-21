@@ -264,14 +264,25 @@ footer a:focus-visible {
     text-decoration: underline;
 }
 
-/* The account icon sits in the page's top-right corner and scrolls with the page.
-   On phones that's the gutter beside the logo, which leaves room for it. */
+/* The header icons sit in the page's top corners and scroll with the page.
+   On phones those are the gutters beside the logo, which leave room for one icon each. */
 .account {
     position: absolute;
     top: 1rem;
     right: 1rem;
+    left: 1rem;
     display: flex;
-    gap: .5rem;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+/* History takes the top-left corner and the account icon the top-right */
+.account > * {
+    pointer-events: auto;
+}
+
+.account > :last-child {
+    margin-left: auto;
 }
 
 .account [aria-current="page"] {
@@ -357,6 +368,10 @@ footer a:focus-visible {
 
 .history h1 {
     margin-top: 1rem;
+}
+
+.history h1 a {
+    display: block;
 }
 
 .history h2 {
@@ -490,6 +505,8 @@ footer a:focus-visible {
     all: unset;
     box-sizing: border-box;
     display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    container-type: size;
     width: 100%;
     height: 100%;
     padding: 6px;
@@ -511,25 +528,27 @@ footer a:focus-visible {
 }
 
 .day-number {
-    position: absolute;
-    top: 3px;
-    left: 6px;
     font-size: .625rem;
     font-weight: 600;
+    line-height: 1;
     color: #496e9e;
+}
+
+/* Days without a Game stay flat and quiet, so the played days carry the month */
+.day.missed,
+.day.future {
+    display: grid;
+    place-items: center;
+    background: none;
+}
+
+.day.missed {
+    box-shadow: inset 0 0 0 1px rgba(73, 110, 158, .18);
 }
 
 .day.missed .day-number,
 .day.future .day-number {
-    inset: 0;
-    display: grid;
-    place-items: center;
     font-size: .8125rem;
-}
-
-.day.future {
-    background: none;
-    outline: 1px dashed rgba(73, 110, 158, .25);
 }
 
 .day.future .day-number {
@@ -550,16 +569,36 @@ footer a:focus-visible {
 
 /* The board in miniature: a pip per tile, lit in the tile's colour */
 .mosaic {
-    align-self: end;
+    justify-self: center;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12%;
-    width: 72%;
-    margin: auto auto 0;
+    grid-template: repeat(5, 1fr) / repeat(5, 1fr);
+    gap: 2px;
+    /* As big as the cell allows below the day number */
+    width: min(100cqw, 100cqh - .875rem);
+    aspect-ratio: 1;
+    align-self: end;
+}
+
+/* ponytail: on phones a cell is too small for both, so a played day drops its number; its label and dialog still carry the date */
+@media (max-width: 480px) {
+    .day > a,
+    .day > button {
+        grid-template-rows: minmax(0, 1fr);
+        padding: 5px;
+    }
+
+    .day > a .day-number,
+    .day > button .day-number {
+        display: none;
+    }
+
+    .mosaic {
+        width: min(100cqw, 100cqh);
+        align-self: center;
+    }
 }
 
 .mosaic i {
-    aspect-ratio: 1;
     border-radius: 25%;
     background: var(--pip);
 }
