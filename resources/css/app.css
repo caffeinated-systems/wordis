@@ -232,17 +232,12 @@ output:empty {
     }
 }
 
-/* The account icon sits in the header's top-right corner, level with the logo */
-header {
-    position: relative;
-}
-
+/* The account icon sits in the page's top-right corner and scrolls with the page.
+   On phones that's the gutter beside the logo, which leaves room for it. */
 .account {
     position: absolute;
-    /* Centred on the logo, above the h1's bottom margin */
-    top: calc((100% - 1.5rem) / 2);
-    right: 0;
-    translate: 0 -50%;
+    top: 1rem;
+    right: 1rem;
 }
 
 .account a,

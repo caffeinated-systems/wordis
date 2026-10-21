@@ -321,7 +321,7 @@ test('the message sits between the board and the keyboard on phones', function (
         ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
 });
 
-test('the account icon sits beside the logo, clear of it and the board', function (bool $signedIn, int $width, int $height) {
+test('the account icon sits in the page corner, clear of the logo and the board', function (bool $signedIn, int $width, int $height) {
     if ($signedIn) {
         actingAs(User::factory()->create());
     }
@@ -335,7 +335,8 @@ test('the account icon sits beside the logo, clear of it and the board', functio
             const logo = document.querySelector('#wordis-logo').getBoundingClientRect();
             return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2).closest('.account a, .account button') === icon
                 && box.left >= logo.right
-                && box.right <= document.documentElement.clientWidth
+                && box.right === document.documentElement.clientWidth - 16
+                && box.top === 16
                 && box.bottom <= document.querySelector('#game').getBoundingClientRect().top - 7;
         })()
     JS))->toBeTrue();
