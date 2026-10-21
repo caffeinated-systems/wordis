@@ -197,6 +197,33 @@ test('a lost game cannot be replayed into a win', function () {
     expect(rowLetters($page, 4))->toBe('teeth');
 });
 
+test('reloading mid-Game shows the guesses so far', function () {
+    $page = visit('/');
+
+    guess($page, 'tribe');
+    $page->refresh();
+
+    expect(rowLetters($page, 0))->toBe('tribe')
+        ->and(tileStatuses($page, 0))->toBe(['correct', 'present', 'present', 'absent', 'present']);
+    $page->assertPresent('#game > .row:nth-of-type(2).current')
+        ->assertSeeNothingIn('.message')
+        ->assertNoJavaScriptErrors();
+});
+
+test('reloading a finished Game shows it finished', function () {
+    $page = visit('/');
+
+    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $word) {
+        guess($page, $word);
+    }
+    $page->refresh();
+    guess($page, 'tiger');
+
+    $page->assertSeeIn('.message', 'Ha ha, sucka! It was TIGER')
+        ->assertNoJavaScriptErrors();
+    expect(rowLetters($page, 4))->toBe('teeth');
+});
+
 test('a won game ignores further keys', function () {
     $page = visit('/');
 

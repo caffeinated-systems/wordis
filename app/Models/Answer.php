@@ -20,14 +20,20 @@ class Answer extends Model
     use HasFactory;
 
     /**
-     * Today's answer in lowercase, picked from the unused answer pool words on the day's first call.
-     *
-     * The unique `date` column settles a race between two first visitors: the loser reads the winner's row.
+     * Today's answer in lowercase.
      */
     public static function today(): string
     {
-        $date = today()->toDateString();
+        return static::for(today()->toDateString());
+    }
 
+    /**
+     * The answer for a date (Y-m-d) in lowercase, picked from the unused answer pool words on the day's first call.
+     *
+     * The unique `date` column settles a race between two first visitors: the loser reads the winner's row.
+     */
+    public static function for(string $date): string
+    {
         return Cache::store(config()->string('cache.answer_store'))->remember("answer:{$date}", today()->addDay(), fn (): string => static::firstOrCreate(
             ['date' => $date],
             fn (): array => ['word' => self::randomUnusedWord()],

@@ -11,8 +11,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
-class GuessController extends Controller
+/**
+ * @phpstan-type Game array{date: string, guesses: list<string>}
+ */
+class GameController extends Controller
 {
     /**
      * Guesses a player gets before the answer is revealed. The game in resources/js/game.ts allows the same number.
@@ -20,9 +24,30 @@ class GuessController extends Controller
     public const int GUESSES_ALLOWED = 5;
 
     /**
-     * Score a guess against today's answer, revealing the answer when the last guess misses.
+     * Show the player's Game, starting today's when the session's Game belongs to an earlier answer.
      */
-    public function __invoke(Request $request): JsonResponse
+    public function show(Request $request): View
+    {
+        $game = self::game($request);
+
+        if ($game['date'] !== today()->toDateString()) {
+            $game = ['date' => today()->toDateString(), 'guesses' => []];
+        }
+
+        $request->session()->put('game', $game);
+
+        $answer = Answer::for($game['date']);
+
+        return view('welcome', ['game' => [
+            'guesses' => array_map(fn (string $guess): array => ['word' => $guess, 'statuses' => self::score($guess, $answer)], $game['guesses']),
+            ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
+        ]]);
+    }
+
+    /**
+     * Score a guess against the answer the Game started on, revealing the answer when the last guess misses.
+     */
+    public function guess(Request $request): JsonResponse
     {
         $request->validate([
             'guess' => ['bail', 'required', 'string', 'regex:/^[a-zA-Z]{5}\z/', function (string $attribute, string $guess, Closure $fail): void {
@@ -31,17 +56,40 @@ class GuessController extends Controller
                     $fail('Not in word list');
                 }
             }],
-            'attempt' => ['required', 'integer', 'between:1,'.self::GUESSES_ALLOWED],
         ]);
 
+        $game = self::game($request);
+        $answer = Answer::for($game['date']);
+
+        abort_if(in_array($answer, $game['guesses'], true) || count($game['guesses']) >= self::GUESSES_ALLOWED, 409, 'This game is over');
+
         $guess = $request->string('guess')->lower()->value();
-        $answer = Answer::today();
-        $lost = $guess !== $answer && $request->integer('attempt') === self::GUESSES_ALLOWED;
+        $game['guesses'][] = $guess;
+        $request->session()->put('game', $game);
 
         return response()->json([
             'statuses' => self::score($guess, $answer),
-            ...($lost ? ['answer' => $answer] : []),
+            ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
         ]);
+    }
+
+    /**
+     * The session's Game, or a new one for today when the session has none.
+     *
+     * @return Game
+     */
+    private static function game(Request $request): array
+    {
+        /** @var Game */
+        return $request->session()->get('game', ['date' => today()->toDateString(), 'guesses' => []]);
+    }
+
+    /**
+     * @param  list<string>  $guesses
+     */
+    private static function isLost(array $guesses, string $answer): bool
+    {
+        return count($guesses) === self::GUESSES_ALLOWED && ! in_array($answer, $guesses, true);
     }
 
     /**
