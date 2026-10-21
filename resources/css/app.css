@@ -556,6 +556,7 @@ footer a:focus-visible {
 }
 
 .day.future > a {
+    grid-template-rows: none;
     place-items: center;
 }
 
