@@ -43,11 +43,27 @@ test('stats count finished days in a row, a loss included', function () {
 
     actingAs($user)->get('/history')->assertOk()->assertViewHas('stats', [
         'played' => 6,
-        'winRate' => 50,
+        'winRate' => 60,
         'currentStreak' => 2,
         'bestStreak' => 3,
         'distribution' => [1 => 1, 2 => 1, 3 => 1, 4 => 0, 5 => 0, 'lost' => 2],
     ]);
+});
+
+test('today\'s unfinished Game doesn\'t lower the win rate', function () {
+    $user = User::factory()->create();
+    playedOn($user, '2026-10-20', ['tiger']);
+    playedOn($user, '2026-10-21', ['crane']);
+
+    actingAs($user)->get('/history')->assertViewHas('stats', fn (array $stats): bool => $stats['played'] === 2 && $stats['winRate'] === 100);
+});
+
+test('a player with no Games sees this month, empty stats and today waiting to be played', function () {
+    actingAs(User::factory()->create())->get('/history')
+        ->assertOk()
+        ->assertViewHas('previousMonth', null)
+        ->assertViewHas('stats', fn (array $stats): bool => $stats['played'] === 0 && $stats['winRate'] === 0 && $stats['bestStreak'] === 0)
+        ->assertSee('21 October: still to play', false);
 });
 
 test('the current streak ends at a day without a finished Game', function (array $games, int $currentStreak) {
@@ -88,4 +104,5 @@ test('months run from the first played Game to this month', function (string $qu
     'before the first month' => ['?month=2026-07', '2026-10', '2026-09', null],
     'after this month' => ['?month=2026-11', '2026-10', '2026-09', null],
     'not a month' => ['?month=2026-13', '2026-10', '2026-09', null],
+    'not a string' => ['?month[]=2026-09', '2026-10', '2026-09', null],
 ]);

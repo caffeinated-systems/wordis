@@ -69,14 +69,20 @@
                             'won' => 'won in '.count($game['rows']).' '.Str::plural('guess', count($game['rows'])),
                             'lost' => 'lost',
                             'unfinished' => $cell['date'] === $today ? 'in progress' : 'unfinished',
-                            null => $cell['date'] > $today ? 'still to come' : 'not played',
+                            null => match (true) {
+                                $cell['date'] === $today => 'still to play',
+                                $cell['date'] > $today => 'still to come',
+                                default => 'not played',
+                            },
                         })
                         <li @class([
                             'day',
-                            $game['outcome'] ?? ($cell['date'] > $today ? 'future' : 'missed'),
+                            $game['outcome'] ?? ($cell['date'] >= $today ? 'future' : 'missed'),
                             'today' => $cell['date'] === $today,
                         ]) style="--order: {{ $index }}">
-                            @if ($game === null)
+                            @if ($game === null && $cell['date'] === $today)
+                                <a href="/" class="day-number" aria-label="{{ $label }}. Play today's game">{{ $cell['day'] }}</a>
+                            @elseif ($game === null)
                                 <span class="day-number" aria-label="{{ $label }}">{{ $cell['day'] }}</span>
                             @else
                                 {{-- Today's unfinished Game would spoil the answer, so it goes back to the board instead. --}}
@@ -122,5 +128,19 @@
                 @endif
             @endforeach
         </main>
+
+        {{-- Invoker Commands open the day dialogs without JavaScript; browsers before Safari 26.2 and Firefox 144 get them here. --}}
+        <script>
+            if (!('command' in HTMLButtonElement.prototype)) {
+                document.addEventListener('click', (event) => {
+                    const button = event.target.closest('button[commandfor]');
+                    const dialog = button && document.getElementById(button.getAttribute('commandfor'));
+
+                    if (dialog) {
+                        button.getAttribute('command') === 'close' ? dialog.close() : dialog.showModal();
+                    }
+                });
+            }
+        </script>
     </body>
 </html>

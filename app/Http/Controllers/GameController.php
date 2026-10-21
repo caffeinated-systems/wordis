@@ -95,6 +95,7 @@ class GameController extends Controller
         $today = today()->toDateString();
         $games = [];
 
+        // ponytail: scores every Game on each view, about 365 a year per player; keep stats on the Game if that ever shows up slow.
         foreach ($user->games()->orderBy('date')->get() as $game) {
             if ($game->guesses === []) {
                 continue;
@@ -126,6 +127,8 @@ class GameController extends Controller
         }
 
         $won = array_filter($games, fn (array $game): bool => $game['outcome'] === 'won');
+        // Today's unfinished Game isn't lost yet, so it doesn't count against the win rate.
+        $decided = count($games) - (($games[$today]['outcome'] ?? null) === 'unfinished' ? 1 : 0);
 
         return view('history', [
             'month' => $start,
@@ -135,7 +138,7 @@ class GameController extends Controller
             'cells' => $cells,
             'stats' => [
                 'played' => count($games),
-                'winRate' => $games === [] ? 0 : (int) round(count($won) / count($games) * 100),
+                'winRate' => $decided === 0 ? 0 : (int) round(count($won) / $decided * 100),
                 ...self::streaks(array_keys(array_filter($games, fn (array $game): bool => $game['outcome'] !== 'unfinished'))),
                 'distribution' => array_replace(array_fill(1, self::GUESSES_ALLOWED, 0), array_count_values(array_map(fn (array $game): int => count($game['rows']), $won)))
                     + ['lost' => count(array_filter($games, fn (array $game): bool => $game['outcome'] === 'lost'))],
