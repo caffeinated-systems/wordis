@@ -321,24 +321,26 @@ test('the message sits between the board and the keyboard on phones', function (
         ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
 });
 
-test('the account link sits clear of the logo and the board', function (bool $signedIn, int $width, int $height) {
+test('the account icon sits beside the logo, clear of it and the board', function (bool $signedIn, int $width, int $height) {
     if ($signedIn) {
         actingAs(User::factory()->create());
     }
     $page = visit('/');
     $page->resize($width, $height);
 
-    // The board's frame reaches 7px outside #game.
     expect($page->script(<<<'JS'
         (() => {
-            const link = document.querySelector('.account a, .account button');
-            const box = link.getBoundingClientRect();
-            return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2) === link
-                && box.top >= document.querySelector('#wordis-logo').getBoundingClientRect().bottom
+            const icon = document.querySelector('.account a, .account button');
+            const box = icon.getBoundingClientRect();
+            const logo = document.querySelector('#wordis-logo').getBoundingClientRect();
+            return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2).closest('.account a, .account button') === icon
+                && box.left >= logo.right
+                && box.right <= document.documentElement.clientWidth
                 && box.bottom <= document.querySelector('#game').getBoundingClientRect().top - 7;
         })()
     JS))->toBeTrue();
 })->with(['signed out' => false, 'signed in' => true])->with([
+    'small phone' => [320, 640],
     'phone' => [390, 844],
     'laptop' => [1366, 650],
 ]);

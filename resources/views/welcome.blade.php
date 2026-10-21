@@ -16,10 +16,10 @@
                     @auth
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit">Log out</button>
+                            <button type="submit" class="signed-in" aria-label="Log out" title="Log out"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button>
                         </form>
                     @else
-                        <a href="{{ route('login') }}">Log in</a>
+                        <a href="{{ route('login') }}" aria-label="Log in" title="Log in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></a>
                     @endauth
                 </nav>
                 <h1 aria-label="Wordis">
