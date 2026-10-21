@@ -238,17 +238,19 @@ footer {
     font-size: 0.75rem;
     line-height: 1rem;
     text-align: center;
-    color: #8a9bb5;
+    color: #8494ab;
 }
 
+/* Links are underlined only on hover, so they stand apart from the text by contrast (3.1:1) */
 footer a {
-    color: #6ba0e2;
+    color: white;
     text-decoration: none;
+    text-underline-offset: 2px;
 }
 
 footer a:hover,
 footer a:focus-visible {
-    color: white;
+    text-decoration: underline;
 }
 
 /* The account icon sits in the page's top-right corner and scrolls with the page.

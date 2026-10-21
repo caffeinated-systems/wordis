@@ -55,7 +55,7 @@
             <footer>
                 <a href="{{ route('privacy') }}">Privacy</a>
                 <span aria-hidden="true">·</span>
-                Built with <span aria-label="love">♥</span> by <a href="https://caffeinated.systems">Caffeinated Systems</a>
+                Built with <span role="img" aria-label="love">♥</span> by <a href="https://caffeinated.systems" target="_blank" rel="noopener">Caffeinated Systems</a>
             </footer>
         </main>
     </body>

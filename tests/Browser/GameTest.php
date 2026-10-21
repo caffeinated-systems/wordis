@@ -32,6 +32,16 @@ test('typing fills the current row', function () {
     expect(rowLetters($page, 0))->toBe('tri');
 });
 
+test('enter on a focused link does not submit the guess', function () {
+    $page = visit('/');
+    $page->keys('#game', ['t', 'i', 'g', 'e', 'r']);
+
+    $page->script("document.querySelector('footer a').dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }))");
+    settle($page);
+
+    expect(tileStatuses($page, 0))->toBe(['', '', '', '', '']);
+});
+
 test('keys that are not letters do not fill the row', function () {
     $page = visit('/');
 
@@ -208,7 +218,7 @@ test('the board and keyboard fit on a phone screen without scrolling', function 
     $page = visit('/');
     $page->resize($width, $height);
 
-    expect($page->script("document.querySelector('#keyboard').getBoundingClientRect().bottom"))->toBeLessThanOrEqual($height)
+    expect($page->script("document.querySelector('footer').getBoundingClientRect().bottom"))->toBeLessThanOrEqual($height)
         ->and($page->script('document.documentElement.scrollHeight'))->toBeLessThanOrEqual($height)
         ->and($page->script("document.querySelector('#wordis-logo').getBoundingClientRect().top"))->toBeGreaterThanOrEqual(0)
         ->and($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(50);
@@ -232,7 +242,7 @@ test('a laptop screen keeps the board readable', function () {
     $page->resize(1366, 650);
 
     expect($page->script("document.querySelector('#game .tile').getBoundingClientRect().height"))->toBeGreaterThanOrEqual(60)
-        ->and($page->script("document.querySelector('#keyboard').getBoundingClientRect().bottom"))->toBeLessThanOrEqual(650);
+        ->and($page->script("document.querySelector('footer').getBoundingClientRect().bottom"))->toBeLessThanOrEqual(650);
 });
 
 test('tiles keep their full size on a tall desktop screen', function () {

@@ -88,8 +88,8 @@ export default function game() {
                 ?? tiles.find((tile) => tile.status === 'absent');
         },
         onPhysicalKey(event: KeyboardEvent): void {
-            // Enter on a focused on-screen key has already pressed that key.
-            if (event.key === 'Enter' && (event.target as Element).closest('.key')) {
+            // Enter on a focused on-screen key, link or button has already activated it, so it isn't a guess.
+            if (event.key === 'Enter' && (event.target as Element).closest('a, button')) {
                 return;
             }
             this.onKeyPress(event.key);
