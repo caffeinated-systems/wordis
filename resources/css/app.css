@@ -240,7 +240,10 @@ header {
 .account {
     position: absolute;
     top: 100%;
-    right: 0;
+    left: 50%;
+    translate: -50%;
+    width: min(400px, 100%);
+    text-align: right;
 }
 
 .account a,

@@ -25,14 +25,17 @@ Route::get('/login', fn (AuthKitLoginRequest $request): Response => $request->re
     ->name('login');
 
 Route::get('/authenticate', function (AuthKitAuthenticationRequest $request): Response {
-    try {
-        // A player recreated in WorkOS gets a new id but keeps their verified email, so the email finds them too.
-        $request->authenticate(findUsing: function (WorkOSUser $workOsUser): ?User {
-            $user = User::firstWhere('workos_id', $workOsUser->id) ?? User::firstWhere('email', $workOsUser->email);
-            $user?->update(['workos_id' => $workOsUser->id]);
+    // The package's state check passes when both sides are missing, so a login must be pending.
+    abort_unless($request->session()->has('state'), 403);
 
-            return $user;
-        });
+    // A player who cancels on AuthKit comes back with an error and no code.
+    if (! $request->filled('code')) {
+        return redirect('/');
+    }
+
+    try {
+        // Keeping the email in step stops an address a player has left from blocking whoever takes it next.
+        $request->authenticate(updateUsing: fn (User $user, WorkOSUser $workOsUser): User => tap($user)->update(['email' => $workOsUser->email]));
     } catch (WorkOSException $exception) {
         report($exception);
     }
