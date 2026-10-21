@@ -95,8 +95,8 @@ export default function game() {
             this.onKeyPress(event.key);
         },
         keepFocusOffKeys(event: MouseEvent): void {
-            // A tap must not leave a key focused, or a physical Enter would press it again.
-            // Tab still focuses keys for players who use them from the keyboard.
+            // A tap must not leave a key or footer link focused, or a physical Enter would press it again instead of guessing.
+            // Tab still focuses them for players who use them from the keyboard.
             event.preventDefault();
             (document.activeElement as HTMLElement | null)?.blur();
         },

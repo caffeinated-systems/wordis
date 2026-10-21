@@ -42,6 +42,18 @@ test('enter on a focused link does not submit the guess', function () {
     expect(tileStatuses($page, 0))->toBe(['', '', '', '', '']);
 });
 
+test('clicking a footer link does not leave it focused to catch the next enter', function () {
+    $page = visit('/');
+
+    expect($page->script(<<<'JS'
+        (() => {
+            const press = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+            document.querySelector('footer a').dispatchEvent(press);
+            return press.defaultPrevented;
+        })()
+    JS))->toBeTrue();
+});
+
 test('keys that are not letters do not fill the row', function () {
     $page = visit('/');
 
