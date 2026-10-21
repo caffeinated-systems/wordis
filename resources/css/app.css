@@ -101,8 +101,8 @@ h1 {
 }
 
 #keyboard {
-    margin: min(4rem, 5vh) 0;
-    margin: min(4rem, 5dvh) 0;
+    margin: min(4rem, 5vh) 0 0.5rem;
+    margin: min(4rem, 5dvh) 0 0.5rem;
     flex: none;
 }
 
@@ -228,8 +228,27 @@ output:empty {
     }
 
     #keyboard {
-        margin: 4.75rem 0 1rem;
+        margin: 4.75rem 0 0.5rem;
     }
+}
+
+footer {
+    flex: none;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-align: center;
+    color: #8a9bb5;
+}
+
+footer a {
+    color: #6ba0e2;
+    text-decoration: none;
+}
+
+footer a:hover,
+footer a:focus-visible {
+    color: white;
 }
 
 /* The account icon sits in the page's top-right corner and scrolls with the page.

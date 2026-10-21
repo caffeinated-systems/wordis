@@ -37,3 +37,11 @@ test('the privacy page says what is kept and who to ask about it', function () {
         ->assertSee('<title>Privacy · Wordis</title>', false)
         ->assertSee('mailto:daniel.j.floris@gmail.com', false);
 });
+
+test('the footer links to the privacy page and to Caffeinated Systems', function () {
+    Answer::factory()->today()->create();
+
+    get('/')
+        ->assertSee('href="'.route('privacy').'"', false)
+        ->assertSee('href="https://caffeinated.systems"', false);
+});
