@@ -224,6 +224,22 @@ test('reloading a finished Game shows it finished', function () {
     expect(rowLetters($page, 4))->toBe('teeth');
 });
 
+test('a Game lost from another tab shows the answer', function () {
+    $page = visit('/');
+
+    $page->script(<<<'JS'
+        (async () => {
+            for (const guess of ['crane', 'house', 'apple', 'route']) {
+                await fetch('/guesses', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ guess }) });
+            }
+        })()
+    JS);
+    guess($page, 'teeth');
+
+    $page->assertSeeIn('.message', 'Ha ha, sucka! It was TIGER')
+        ->assertNoJavaScriptErrors();
+});
+
 test('a won game ignores further keys', function () {
     $page = visit('/');
 

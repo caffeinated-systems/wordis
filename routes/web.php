@@ -11,10 +11,10 @@ use Laravel\WorkOS\Http\Requests\AuthKitLogoutRequest;
 use Symfony\Component\HttpFoundation\Response;
 use WorkOS\Exception\WorkOSException;
 
-Route::get('/', [GameController::class, 'show']);
+Route::get('/', [GameController::class, 'show'])->block();
 Route::view('/privacy', 'privacy')->name('privacy');
 
-// Blocking queues a session's guesses, so two sent at once can't both be scored against the same count.
+// Blocking queues a session's page loads and guesses, so neither writes back a stale Game over the other's.
 Route::post('/guesses', [GameController::class, 'guess'])
     ->middleware('throttle:guesses')
     ->block();

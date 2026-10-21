@@ -85,10 +85,10 @@ export default function game(saved: SavedGame = { guesses: [] }) {
             this.board = Array.from({ length: this.guessesAllowed }, () => {
                 return Array.from({ length: this.wordLength }, (item, index) => new Tile(index));
             });
-            for (const { word, statuses } of saved.guesses) {
+            saved.guesses.forEach(({ word, statuses }, index) => {
                 [...word].forEach((letter) => this.fillTile(letter));
-                this.applyResult({ statuses, answer: saved.answer }, false);
-            }
+                this.applyResult({ statuses, answer: index === saved.guesses.length - 1 ? saved.answer : undefined }, false);
+            });
             // A Game in progress resumes quietly; a finished one shows its message again.
             if (this.state === 'active') {
                 this.message = '';
@@ -196,10 +196,16 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 if (celebrate) {
                     confetti();
                 }
-            } else if (this.remainingGuesses === 0) {
+            } else if (answer) {
+                // The server reveals the answer only when the Game is lost, even if another tab made the earlier guesses.
                 this.state = 'complete';
-                this.answer = answer ?? '';
+                this.answer = answer;
                 this.message = `Ha ha, sucka! It was ${this.answer.toUpperCase()}`;
+            } else if (this.remainingGuesses === 0) {
+                // Out of rows but not lost: another tab moved the Game on, or a new day started it over.
+                this.state = 'complete';
+                this.errors = true;
+                this.message = 'This game changed in another tab, reload the page';
             } else {
                 this.currentRowIndex++;
                 const disses = this.disses[heat(statuses)];

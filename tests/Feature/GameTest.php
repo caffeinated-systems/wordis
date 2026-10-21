@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Answer;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 use function Pest\Laravel\get;
 use function Pest\Laravel\postJson;
@@ -112,6 +113,15 @@ test('the first page load after midnight starts the new day\'s Game', function (
 
     get('/')->assertViewHas('game', ['guesses' => []]);
     postJson('/guesses', ['guess' => 'crane'])->assertExactJson(['statuses' => array_fill(0, 5, 'correct')]);
+});
+
+test('a guess needs the CSRF token from the page', function () {
+    // Forgery protection is skipped in the testing environment, so step out of it.
+    app()->detectEnvironment(fn (): string => 'local');
+    $token = Str::betweenFirst((string) get('/')->getContent(), 'name="csrf-token" content="', '"');
+
+    postJson('/guesses', ['guess' => 'crane'])->assertStatus(419);
+    postJson('/guesses', ['guess' => 'crane'], ['X-CSRF-TOKEN' => $token])->assertOk();
 });
 
 test('guessing is limited to 60 a minute', function () {
