@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\Answer;
+use App\Models\User;
+
+use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
     Answer::factory()->today()->create(['word' => 'tiger']);
@@ -318,19 +321,24 @@ test('the message sits between the board and the keyboard on phones', function (
         ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
 });
 
-test('the log in link sits clear of the board', function (int $width, int $height) {
+test('the account link sits clear of the logo and the board', function (bool $signedIn, int $width, int $height) {
+    if ($signedIn) {
+        actingAs(User::factory()->create());
+    }
     $page = visit('/');
     $page->resize($width, $height);
 
+    // The board's frame reaches 7px outside #game.
     expect($page->script(<<<'JS'
         (() => {
-            const link = document.querySelector('.account a');
+            const link = document.querySelector('.account a, .account button');
             const box = link.getBoundingClientRect();
             return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2) === link
-                && box.bottom <= document.querySelector('#game').getBoundingClientRect().top;
+                && box.top >= document.querySelector('#wordis-logo').getBoundingClientRect().bottom
+                && box.bottom <= document.querySelector('#game').getBoundingClientRect().top - 7;
         })()
     JS))->toBeTrue();
-})->with([
+})->with(['signed out' => false, 'signed in' => true])->with([
     'phone' => [390, 844],
     'laptop' => [1366, 650],
 ]);

@@ -27,9 +27,7 @@ Route::get('/authenticate', function (AuthKitAuthenticationRequest $request): Re
     abort_unless($request->session()->has('state') && is_string($request->query('state')), 403);
 
     // A player who cancels on AuthKit comes back with an error and no code.
-    if (! is_string($request->query('code'))) {
-        $request->session()->forget('state');
-
+    if (! is_string($request->query('code')) || $request->query('code') === '') {
         return redirect('/');
     }
 

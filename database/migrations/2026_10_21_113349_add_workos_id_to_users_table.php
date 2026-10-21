@@ -26,10 +26,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Restoring the email index first stops a rollback with duplicate emails before it drops anything.
+        Schema::table('users', function (Blueprint $table) {
+            $table->unique('email');
+        });
+
         Schema::table('users', function (Blueprint $table) {
             $table->dropUnique(['workos_id']);
             $table->dropColumn('workos_id');
-            $table->unique('email');
         });
     }
 };

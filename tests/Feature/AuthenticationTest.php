@@ -111,6 +111,14 @@ test('the callback refuses a code when no login is pending', function () {
     assertGuest();
 });
 
+test('the callback refuses a state that is not a string', function () {
+    withSession(['state' => json_encode(['state' => 'abc'])])
+        ->get('/authenticate?code=the-code&state[]=abc')
+        ->assertForbidden();
+
+    assertGuest();
+});
+
 test('a player whose email another player used to have can sign up', function () {
     User::factory()->create(['workos_id' => 'user_moved_on', 'email' => 'ada@example.com']);
     workOsAuthenticates('the-code', 'user_new', 'ada@example.com');
@@ -129,8 +137,7 @@ test('a player who cancels on AuthKit is sent home without asking WorkOS for a c
 
     withSession(['state' => json_encode(['state' => 'abc'])])
         ->get('/authenticate?error=access_denied&state='.urlencode(json_encode(['state' => 'abc'])))
-        ->assertRedirect('/')
-        ->assertSessionMissing('state');
+        ->assertRedirect('/');
 
     assertGuest();
 });
