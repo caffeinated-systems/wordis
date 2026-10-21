@@ -58,12 +58,23 @@ test('today\'s unfinished Game doesn\'t lower the win rate', function () {
     actingAs($user)->get('/history')->assertViewHas('stats', fn (array $stats): bool => $stats['played'] === 2 && $stats['winRate'] === 100);
 });
 
-test('a player with no Games sees this month, empty stats and today waiting to be played', function () {
+test('a player with no Games is told how to fill the page instead of seeing empty stats', function () {
     actingAs(User::factory()->create())->get('/history')
         ->assertOk()
         ->assertViewHas('previousMonth', null)
-        ->assertViewHas('stats', fn (array $stats): bool => $stats['played'] === 0 && $stats['winRate'] === 0 && $stats['bestStreak'] === 0)
-        ->assertSee('21 October: still to play', false);
+        ->assertSee('Your games will show up here once you\'ve played', false)
+        ->assertDontSee('Best streak')
+        ->assertSee('21 October: still to play', false)
+        ->assertDontSee('class="day missed"', false);
+});
+
+test('only days after the first Game count as missed', function () {
+    $user = User::factory()->create();
+    playedOn($user, '2026-10-10', ['tiger']);
+
+    actingAs($user)->get('/history')
+        ->assertSee('class="day future" style="--order: 11"', false)
+        ->assertSee('class="day missed" style="--order: 13"', false);
 });
 
 test('the current streak ends at a day without a finished Game', function (array $games, int $currentStreak) {

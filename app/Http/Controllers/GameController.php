@@ -135,6 +135,7 @@ class GameController extends Controller
             'previousMonth' => $month > $firstMonth ? $start->subMonth()->format('Y-m') : null,
             'nextMonth' => $month < $thisMonth ? $start->addMonth()->format('Y-m') : null,
             'today' => $today,
+            'firstPlayed' => array_key_first($games),
             'cells' => $cells,
             'stats' => [
                 'played' => count($games),

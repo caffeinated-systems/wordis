@@ -18,25 +18,29 @@
                 </h1>
             </header>
 
-            <section class="stats" aria-label="Your stats">
-                <dl>
-                    <div><dt>Played</dt><dd>{{ $stats['played'] }}</dd></div>
-                    <div><dt>Won</dt><dd>{{ $stats['winRate'] }}%</dd></div>
-                    <div class="streak"><dt>Streak</dt><dd>{{ $stats['currentStreak'] }}</dd></div>
-                    <div><dt>Best streak</dt><dd>{{ $stats['bestStreak'] }}</dd></div>
-                </dl>
+            @if ($stats['played'] === 0)
+                <p class="empty">Your games will show up here once you've played. <a href="/">Play today's game</a></p>
+            @else
+                <section class="stats" aria-label="Your stats">
+                    <dl>
+                        <div><dt>Played</dt><dd>{{ $stats['played'] }}</dd></div>
+                        <div><dt>Won</dt><dd>{{ $stats['winRate'] }}%</dd></div>
+                        <div class="streak"><dt>Streak</dt><dd>{{ $stats['currentStreak'] }}</dd></div>
+                        <div><dt>Best streak</dt><dd>{{ $stats['bestStreak'] }}</dd></div>
+                    </dl>
 
-                @php($mostGames = max(1, ...array_values($stats['distribution'])))
-                <ol class="distribution" aria-label="Games by number of guesses">
-                    @foreach ($stats['distribution'] as $guesses => $count)
-                        <li @class(['lost' => $guesses === 'lost']) style="--share: {{ $count / $mostGames }}">
-                            <span>{!! $guesses === 'lost' ? '<span aria-hidden="true">✕</span><span class="visually-hidden">Lost</span>' : $guesses !!}</span>
-                            <span class="bar"></span>
-                            <span>{{ $count }}</span>
-                        </li>
-                    @endforeach
-                </ol>
-            </section>
+                    @php($mostGames = max(1, ...array_values($stats['distribution'])))
+                    <ol class="distribution" aria-label="Games by number of guesses">
+                        @foreach ($stats['distribution'] as $guesses => $count)
+                            <li @class(['lost' => $guesses === 'lost']) style="--share: {{ $count / $mostGames }}">
+                                <span>{!! $guesses === 'lost' ? '<span aria-hidden="true">✕</span><span class="visually-hidden">Lost</span>' : $guesses !!}</span>
+                                <span class="bar"></span>
+                                <span>{{ $count }}</span>
+                            </li>
+                        @endforeach
+                    </ol>
+                </section>
+            @endif
 
             <section class="calendar" aria-labelledby="month">
                 <nav class="months">
@@ -75,9 +79,10 @@
                                 default => 'not played',
                             },
                         })
+                        {{-- Only a day after the first Game can be missed; earlier days stay plain. --}}
                         <li @class([
                             'day',
-                            $game['outcome'] ?? ($cell['date'] >= $today ? 'future' : 'missed'),
+                            $game['outcome'] ?? ($cell['date'] < $today && $firstPlayed !== null && $cell['date'] > $firstPlayed ? 'missed' : 'future'),
                             'today' => $cell['date'] === $today,
                         ]) style="--order: {{ $index }}">
                             @if ($game === null && $cell['date'] === $today)
