@@ -12,7 +12,6 @@ export function heat(statuses: TileStatus[]): Heat {
 }
 
 type GuessResult = {
-    guess?: number;
     statuses: TileStatus[];
     answer?: string;
 };
@@ -168,26 +167,24 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                         Accept: 'application/json',
                         'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
                     },
-                    body: JSON.stringify({ guess: this.currentGuess }),
+                    body: JSON.stringify({ guess: this.currentGuess, row: this.currentRowIndex + 1 }),
                 });
+                if (response.status === 409) {
+                    // Another tab, a new day or an earlier try of this guess already moved the Game on.
+                    this.state = 'complete';
+                    this.errors = true;
+                    this.message = 'This game moved on, reload the page';
+                    return;
+                }
                 if (!response.ok) {
                     this.errors = true;
                     this.message = response.status === 422 ? 'Not in word list'
-                        : response.status === 409 ? 'This game is over'
                         : response.status === 419 ? 'Your session expired, reload the page'
                         : response.status === 429 ? 'Slow down a bit'
                         : 'Something went wrong, try again';
                     return;
                 }
-                const result: GuessResult = await response.json();
-                // The server counted this guess for another row: another tab moved the Game on, or a new day started it over.
-                if (result.guess !== this.currentRowIndex + 1) {
-                    this.state = 'complete';
-                    this.errors = true;
-                    this.message = 'This game changed in another tab, reload the page';
-                    return;
-                }
-                this.applyResult(result);
+                this.applyResult(await response.json());
             } catch {
                 this.errors = true;
                 this.message = 'Something went wrong, try again';

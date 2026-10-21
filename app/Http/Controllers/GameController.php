@@ -56,19 +56,26 @@ class GameController extends Controller
                     $fail('Not in word list');
                 }
             }],
+            'row' => ['required', 'integer'],
         ]);
 
         $game = self::game($request);
         $answer = Answer::for($game['date']);
 
-        abort_if(in_array($answer, $game['guesses'], true) || count($game['guesses']) >= self::GUESSES_ALLOWED, 409, 'This game is over');
+        // The server counts the guesses; the row only stops a stale tab or a retried request from recording a guess the player didn't mean for this one.
+        abort_if(
+            in_array($answer, $game['guesses'], true)
+            || count($game['guesses']) >= self::GUESSES_ALLOWED
+            || $request->integer('row') !== count($game['guesses']) + 1,
+            409,
+            'This game moved on',
+        );
 
         $guess = $request->string('guess')->lower()->value();
         $game['guesses'][] = $guess;
         $request->session()->put('game', $game);
 
         return response()->json([
-            'guess' => count($game['guesses']),
             'statuses' => self::score($guess, $answer),
             ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
         ]);

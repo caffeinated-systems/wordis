@@ -15,9 +15,9 @@ beforeEach(function () {
 });
 
 test('a guess is scored letter by letter against today\'s answer', function (string $guess, array $statuses) {
-    postJson('/guesses', ['guess' => $guess])
+    postJson('/guesses', ['guess' => $guess, 'row' => 1])
         ->assertOk()
-        ->assertExactJson(['guess' => 1, 'statuses' => $statuses]);
+        ->assertExactJson(['statuses' => $statuses]);
 })->with([
     'a wrong guess' => ['tribe', ['correct', 'present', 'present', 'absent', 'present']],
     'a letter already correct elsewhere' => ['tight', ['correct', 'correct', 'correct', 'absent', 'absent']],
@@ -29,7 +29,7 @@ test('a guess is scored letter by letter against today\'s answer', function (str
 test('a word that is not in the dictionary is rejected and logged', function () {
     Log::spy();
 
-    postJson('/guesses', ['guess' => 'abcde'])
+    postJson('/guesses', ['guess' => 'abcde', 'row' => 1])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['guess' => 'Not in word list']);
 
@@ -37,50 +37,57 @@ test('a word that is not in the dictionary is rejected and logged', function () 
 });
 
 test('the answer is revealed only when the fifth guess misses', function () {
-    foreach (['crane', 'house', 'apple', 'route'] as $guess) {
-        postJson('/guesses', ['guess' => $guess])->assertJsonMissingPath('answer');
+    foreach (['crane', 'house', 'apple', 'route'] as $index => $guess) {
+        postJson('/guesses', ['guess' => $guess, 'row' => $index + 1])->assertJsonMissingPath('answer');
     }
 
-    postJson('/guesses', ['guess' => 'teeth'])->assertJsonPath('answer', 'tiger');
+    postJson('/guesses', ['guess' => 'teeth', 'row' => 5])->assertJsonPath('answer', 'tiger');
 });
 
 test('a fifth guess that wins does not reveal the answer as a loss', function () {
-    foreach (['crane', 'house', 'apple', 'route'] as $guess) {
-        postJson('/guesses', ['guess' => $guess]);
+    foreach (['crane', 'house', 'apple', 'route'] as $index => $guess) {
+        postJson('/guesses', ['guess' => $guess, 'row' => $index + 1]);
     }
 
-    postJson('/guesses', ['guess' => 'tiger'])->assertJsonMissingPath('answer');
+    postJson('/guesses', ['guess' => 'tiger', 'row' => 5])->assertJsonMissingPath('answer');
 });
 
-test('the server counts the guesses, whatever the client says', function () {
-    postJson('/guesses', ['guess' => 'crane', 'attempt' => 5])->assertJsonPath('guess', 1)->assertJsonMissingPath('answer');
-    postJson('/guesses', ['guess' => 'house'])->assertJsonPath('guess', 2);
-});
+test('a guess for any row but the next is refused and not recorded', function (int $row) {
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1])->assertOk();
+
+    postJson('/guesses', ['guess' => 'house', 'row' => $row])->assertConflict();
+    get('/')->assertViewHas('game', fn (array $game): bool => count($game['guesses']) === 1);
+})->with([
+    'a retry of the recorded row' => 1,
+    'skipping ahead' => 3,
+]);
 
 test('a finished Game takes no more guesses', function (array $guesses) {
-    foreach ($guesses as $guess) {
-        postJson('/guesses', ['guess' => $guess])->assertOk();
+    foreach ($guesses as $index => $guess) {
+        postJson('/guesses', ['guess' => $guess, 'row' => $index + 1])->assertOk();
     }
 
-    postJson('/guesses', ['guess' => 'tiger'])->assertConflict();
+    postJson('/guesses', ['guess' => 'tiger', 'row' => count($guesses) + 1])->assertConflict();
     get('/')->assertViewHas('game', fn (array $game): bool => count($game['guesses']) === count($guesses));
 })->with([
     'won' => [['crane', 'tiger']],
     'lost' => [['crane', 'house', 'apple', 'route', 'teeth']],
 ]);
 
-test('malformed guesses are rejected', function (array $payload) {
+test('malformed guesses are rejected', function (array $payload, string $field) {
     postJson('/guesses', $payload)
         ->assertUnprocessable()
-        ->assertJsonValidationErrorFor('guess');
+        ->assertJsonValidationErrorFor($field);
 })->with([
-    'too short' => [['guess' => 'tig']],
-    'not letters' => [['guess' => 'tig3r']],
-    'no guess' => [[]],
+    'too short' => [['guess' => 'tig', 'row' => 1], 'guess'],
+    'not letters' => [['guess' => 'tig3r', 'row' => 1], 'guess'],
+    'no guess' => [['row' => 1], 'guess'],
+    'no row' => [['guess' => 'tiger'], 'row'],
+    'a row that is not a number' => [['guess' => 'tiger', 'row' => 'first'], 'row'],
 ]);
 
 test('loading the page shows the Game so far', function () {
-    postJson('/guesses', ['guess' => 'tribe']);
+    postJson('/guesses', ['guess' => 'tribe', 'row' => 1]);
 
     get('/')->assertViewHas('game', [
         'guesses' => [['word' => 'tribe', 'statuses' => ['correct', 'present', 'present', 'absent', 'present']]],
@@ -88,8 +95,8 @@ test('loading the page shows the Game so far', function () {
 });
 
 test('loading the page after a lost Game shows the answer', function () {
-    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $guess) {
-        postJson('/guesses', ['guess' => $guess]);
+    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $index => $guess) {
+        postJson('/guesses', ['guess' => $guess, 'row' => $index + 1]);
     }
 
     get('/')->assertViewHas('game', fn (array $game): bool => $game['answer'] === 'tiger');
@@ -102,18 +109,18 @@ test('a guess after midnight is scored against the answer the Game started on', 
 
     travelTo(today()->addDay()->setTime(0, 1));
 
-    postJson('/guesses', ['guess' => 'tiger'])->assertExactJson(['guess' => 1, 'statuses' => array_fill(0, 5, 'correct')]);
+    postJson('/guesses', ['guess' => 'tiger', 'row' => 1])->assertExactJson(['statuses' => array_fill(0, 5, 'correct')]);
 });
 
 test('the first page load after midnight starts the new day\'s Game', function () {
     travelTo(today()->setTime(23, 59));
     Answer::factory()->create(['date' => today()->addDay()->toDateString(), 'word' => 'crane']);
-    postJson('/guesses', ['guess' => 'tiger']);
+    postJson('/guesses', ['guess' => 'tiger', 'row' => 1]);
 
     travelTo(today()->addDay()->setTime(0, 1));
 
     get('/')->assertViewHas('game', ['guesses' => []]);
-    postJson('/guesses', ['guess' => 'crane'])->assertExactJson(['guess' => 1, 'statuses' => array_fill(0, 5, 'correct')]);
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1])->assertExactJson(['statuses' => array_fill(0, 5, 'correct')]);
 });
 
 test('a guess needs the CSRF token from the page', function () {
@@ -121,23 +128,23 @@ test('a guess needs the CSRF token from the page', function () {
     app()->detectEnvironment(fn (): string => 'local');
     $token = Str::betweenFirst((string) get('/')->getContent(), 'name="csrf-token" content="', '"');
 
-    postJson('/guesses', ['guess' => 'crane'])->assertStatus(419);
-    postJson('/guesses', ['guess' => 'crane'], ['X-CSRF-TOKEN' => $token])->assertOk();
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1])->assertStatus(419);
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1], ['X-CSRF-TOKEN' => $token])->assertOk();
 });
 
 test('guessing is limited to 60 a minute', function () {
     foreach (range(1, 60) as $request) {
-        expect(postJson('/guesses', ['guess' => 'crane'])->status())->not->toBe(429);
+        expect(postJson('/guesses', ['guess' => 'crane', 'row' => 1])->status())->not->toBe(429);
     }
 
-    postJson('/guesses', ['guess' => 'crane'])->assertTooManyRequests();
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1])->assertTooManyRequests();
 });
 
 test('the rate limit counts each player behind Cloudflare separately', function () {
     foreach (range(1, 60) as $request) {
-        expect(postJson('/guesses', ['guess' => 'crane'], ['CF-Connecting-IP' => '203.0.113.1'])->status())->not->toBe(429);
+        expect(postJson('/guesses', ['guess' => 'crane', 'row' => 1], ['CF-Connecting-IP' => '203.0.113.1'])->status())->not->toBe(429);
     }
 
-    postJson('/guesses', ['guess' => 'crane'], ['CF-Connecting-IP' => '203.0.113.1'])->assertTooManyRequests();
-    expect(postJson('/guesses', ['guess' => 'crane'], ['CF-Connecting-IP' => '203.0.113.2'])->status())->not->toBe(429);
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1], ['CF-Connecting-IP' => '203.0.113.1'])->assertTooManyRequests();
+    expect(postJson('/guesses', ['guess' => 'crane', 'row' => 1], ['CF-Connecting-IP' => '203.0.113.2'])->status())->not->toBe(429);
 });

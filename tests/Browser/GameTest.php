@@ -224,13 +224,13 @@ test('reloading a finished Game shows it finished', function () {
     expect(rowLetters($page, 4))->toBe('teeth');
 });
 
-test('a guess the server counts for another row asks for a reload', function () {
+test('a guess for a Game another tab moved on asks for a reload', function () {
     $page = visit('/');
 
-    $page->script("fetch('/guesses', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ guess: 'crane' }) })");
+    $page->script("fetch('/guesses', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ guess: 'crane', row: 1 }) })");
     guess($page, 'house');
 
-    $page->assertSeeIn('.message', 'This game changed in another tab, reload the page')
+    $page->assertSeeIn('.message', 'This game moved on, reload the page')
         ->assertNoJavaScriptErrors();
     expect(tileStatuses($page, 0))->each->toBe('');
 });
