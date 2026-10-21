@@ -232,7 +232,69 @@ output:empty {
     }
 }
 
+/* The account icon sits in the page's top-right corner and scrolls with the page.
+   On phones that's the gutter beside the logo, which leaves room for it. */
+.account {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.account a,
+.account button {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1.5px solid #6ba0e2;
+    border-radius: 50%;
+    background: none;
+    color: #6ba0e2;
+    cursor: pointer;
+    transition: color .15s, background-color .15s;
+}
+
+.account svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.account .signed-in {
+    background: #6ba0e2;
+    color: #0e1626;
+}
+
+.account a:hover,
+.account a:focus-visible,
+.account button:hover,
+.account button:focus-visible {
+    background: white;
+    color: #0e1626;
+}
+
 #wordis-logo {
-    width: min(320px, 80vw);
+    width: min(320px, 100% - 6rem);
     height: auto;
+}
+
+/* The privacy page is a plain document, read top to bottom */
+.policy {
+    align-self: start;
+    width: min(40rem, 100vw - 2rem);
+    padding: 2rem 0 4rem;
+    line-height: 1.6;
+}
+
+.policy h1 {
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.policy a {
+    color: #6ba0e2;
 }

@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\Answer;
+use App\Models\User;
+
+use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
     Answer::factory()->today()->create(['word' => 'tiger']);
@@ -317,3 +320,28 @@ test('the message sits between the board and the keyboard on phones', function (
         ->and($page->script("document.querySelector('#keyboard').getBoundingClientRect().top"))->toBe($keyboardTop)
         ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
 });
+
+test('the account icon sits in the page corner, clear of the logo and the board', function (bool $signedIn, int $width, int $height) {
+    if ($signedIn) {
+        actingAs(User::factory()->create());
+    }
+    $page = visit('/');
+    $page->resize($width, $height);
+
+    expect($page->script(<<<'JS'
+        (() => {
+            const icon = document.querySelector('.account a, .account button');
+            const box = icon.getBoundingClientRect();
+            const logo = document.querySelector('#wordis-logo').getBoundingClientRect();
+            return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2).closest('.account a, .account button') === icon
+                && box.left >= logo.right
+                && box.right === document.documentElement.clientWidth - 16
+                && box.top === 16
+                && box.bottom <= document.querySelector('#game').getBoundingClientRect().top - 7;
+        })()
+    JS))->toBeTrue();
+})->with(['signed out' => false, 'signed in' => true])->with([
+    'small phone' => [320, 640],
+    'phone' => [390, 844],
+    'laptop' => [1366, 650],
+]);
