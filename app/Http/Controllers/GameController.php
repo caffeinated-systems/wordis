@@ -98,10 +98,15 @@ class GameController extends Controller
 
         $answer = Answer::for($guestGame['date']);
 
-        // Locked like a guess, so a guess another device makes meanwhile isn't written over. SQLite's busy errors are retried.
+        // Locked like a guess, so a guess another device makes meanwhile isn't written over. Deadlocks and busy errors are retried.
         DB::transaction(function () use ($user, $guestGame, $answer): void {
-            $user->games()->createOrFirst(['date' => $guestGame['date']], ['guesses' => $guestGame['guesses']]);
-            $accountGame = $user->games()->where('date', $guestGame['date'])->lockForUpdate()->sole();
+            $accountGame = $user->games()->where('date', $guestGame['date'])->lockForUpdate()->first();
+
+            if ($accountGame === null) {
+                // A row another device created meanwhile is read again, under the lock.
+                $user->games()->createOrFirst(['date' => $guestGame['date']], ['guesses' => $guestGame['guesses']]);
+                $accountGame = $user->games()->where('date', $guestGame['date'])->lockForUpdate()->sole();
+            }
 
             if ($accountGame->guesses === [] || (self::isFinished($guestGame['guesses'], $answer) && ! self::isFinished($accountGame->guesses, $answer))) {
                 $accountGame->update(['guesses' => $guestGame['guesses']]);
