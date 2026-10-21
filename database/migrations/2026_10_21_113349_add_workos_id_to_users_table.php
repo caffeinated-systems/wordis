@@ -16,6 +16,8 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('workos_id')->nullable()->unique()->after('id');
             $table->string('password')->nullable()->change();
+            // Players are matched by workos_id, so an address one player has left can't block whoever takes it next.
+            $table->dropUnique(['email']);
         });
     }
 
@@ -27,6 +29,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropUnique(['workos_id']);
             $table->dropColumn('workos_id');
+            $table->unique('email');
         });
     }
 };

@@ -232,14 +232,14 @@ output:empty {
     }
 }
 
-/* The link sits in the gap under the logo, so it takes no height from the board */
+/* The link sits in the gap under the logo, so it takes no height from the board. The header holds that gap, since a flex item keeps its child's margin. */
 header {
     position: relative;
 }
 
 .account {
     position: absolute;
-    top: 100%;
+    bottom: 0;
     left: 50%;
     translate: -50%;
     width: min(400px, 100%);

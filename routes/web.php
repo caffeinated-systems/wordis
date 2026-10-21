@@ -3,13 +3,11 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\GuessController;
-use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 use Laravel\WorkOS\Http\Requests\AuthKitAuthenticationRequest;
 use Laravel\WorkOS\Http\Requests\AuthKitLoginRequest;
 use Laravel\WorkOS\Http\Requests\AuthKitLogoutRequest;
-use Laravel\WorkOS\User as WorkOSUser;
 use Symfony\Component\HttpFoundation\Response;
 use WorkOS\Exception\WorkOSException;
 
@@ -26,16 +24,17 @@ Route::get('/login', fn (AuthKitLoginRequest $request): Response => $request->re
 
 Route::get('/authenticate', function (AuthKitAuthenticationRequest $request): Response {
     // The package's state check passes when both sides are missing, so a login must be pending.
-    abort_unless($request->session()->has('state'), 403);
+    abort_unless($request->session()->has('state') && is_string($request->query('state')), 403);
 
     // A player who cancels on AuthKit comes back with an error and no code.
-    if (! $request->filled('code')) {
+    if (! is_string($request->query('code'))) {
+        $request->session()->forget('state');
+
         return redirect('/');
     }
 
     try {
-        // Keeping the email in step stops an address a player has left from blocking whoever takes it next.
-        $request->authenticate(updateUsing: fn (User $user, WorkOSUser $workOsUser): User => tap($user)->update(['email' => $workOsUser->email]));
+        $request->authenticate();
     } catch (WorkOSException $exception) {
         report($exception);
     }

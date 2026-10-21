@@ -317,3 +317,20 @@ test('the message sits between the board and the keyboard on phones', function (
         ->and($page->script("document.querySelector('#keyboard').getBoundingClientRect().top"))->toBe($keyboardTop)
         ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
 });
+
+test('the log in link sits clear of the board', function (int $width, int $height) {
+    $page = visit('/');
+    $page->resize($width, $height);
+
+    expect($page->script(<<<'JS'
+        (() => {
+            const link = document.querySelector('.account a');
+            const box = link.getBoundingClientRect();
+            return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2) === link
+                && box.bottom <= document.querySelector('#game').getBoundingClientRect().top;
+        })()
+    JS))->toBeTrue();
+})->with([
+    'phone' => [390, 844],
+    'laptop' => [1366, 650],
+]);

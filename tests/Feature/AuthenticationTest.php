@@ -71,7 +71,7 @@ test('the callback registers and signs in a new player', function () {
     assertAuthenticatedAs($user);
 });
 
-test('the callback signs in an existing player by their WorkOS id and keeps their email current', function () {
+test('the callback signs in an existing player by their WorkOS id', function () {
     $user = User::factory()->create(['workos_id' => 'user_existing', 'email' => 'old@example.com']);
     workOsAuthenticates('the-code', 'user_existing', 'new@example.com');
 
@@ -80,7 +80,6 @@ test('the callback signs in an existing player by their WorkOS id and keeps thei
         ->assertRedirect('/');
 
     assertDatabaseCount('users', 1);
-    expect($user->refresh()->email)->toBe('new@example.com');
     assertAuthenticatedAs($user);
 });
 
@@ -112,6 +111,17 @@ test('the callback refuses a code when no login is pending', function () {
     assertGuest();
 });
 
+test('a player whose email another player used to have can sign up', function () {
+    User::factory()->create(['workos_id' => 'user_moved_on', 'email' => 'ada@example.com']);
+    workOsAuthenticates('the-code', 'user_new', 'ada@example.com');
+
+    withSession(['state' => json_encode(['state' => 'abc'])])
+        ->get('/authenticate?code=the-code&state='.urlencode(json_encode(['state' => 'abc'])))
+        ->assertRedirect('/');
+
+    assertAuthenticatedAs(User::firstWhere('workos_id', 'user_new'));
+});
+
 test('a player who cancels on AuthKit is sent home without asking WorkOS for a code', function () {
     $requestClient = Mockery::mock(RequestClientInterface::class);
     $requestClient->shouldNotReceive('request');
@@ -119,7 +129,8 @@ test('a player who cancels on AuthKit is sent home without asking WorkOS for a c
 
     withSession(['state' => json_encode(['state' => 'abc'])])
         ->get('/authenticate?error=access_denied&state='.urlencode(json_encode(['state' => 'abc'])))
-        ->assertRedirect('/');
+        ->assertRedirect('/')
+        ->assertSessionMissing('state');
 
     assertGuest();
 });
