@@ -75,7 +75,7 @@ test('an incomplete guess is ignored', function () {
 
     guess($page, 'tig');
 
-    $page->assertSeeNothingIn('.message')
+    $page->assertSeeNothingIn('.message span')
         ->assertPresent('#game > .row:nth-of-type(1).current');
     expect(tileStatuses($page, 0))->each->toBe('')
         ->and($page->script("getComputedStyle(document.querySelector('.message')).opacity"))->toBe('0');
@@ -144,11 +144,30 @@ test('a wrong guess gets a diss that matches how close it was', function (string
 
     guess($page, $word);
 
-    expect($page->script("Alpine.\$data(document.querySelector('main')).disses.{$heat}.includes(document.querySelector('.message').textContent)"))->toBeTrue();
+    expect($page->script("Alpine.\$data(document.querySelector('main')).disses.{$heat}.includes(document.querySelector('.message span').textContent)"))->toBeTrue();
 })->with([
     'nothing right is cold' => ['plush', 'cold'],
     'four letters in place is hot' => ['timer', 'hot'],
 ]);
+
+test('a guest who finishes a Game is offered an account to save it', function () {
+    $page = visit('/');
+
+    guess($page, 'tiger');
+
+    $page->assertSeeIn('.message', 'Create an account to save this result')
+        ->assertAttributeContains('.save-result', 'href', '/login?signup=1');
+});
+
+test('a signed-in player who finishes a Game is not offered an account', function () {
+    actingAs(User::factory()->create());
+    $page = visit('/');
+
+    guess($page, 'tiger');
+
+    $page->assertSeeIn('.message', 'Lucky')
+        ->assertDontSee('Create an account to save this result');
+});
 
 test('a later win gets its own message', function () {
     $page = visit('/');
@@ -206,7 +225,7 @@ test('reloading mid-Game shows the guesses so far', function () {
     expect(rowLetters($page, 0))->toBe('tribe')
         ->and(tileStatuses($page, 0))->toBe(['correct', 'present', 'present', 'absent', 'present']);
     $page->assertPresent('#game > .row:nth-of-type(2).current')
-        ->assertSeeNothingIn('.message')
+        ->assertSeeNothingIn('.message span')
         ->assertNoJavaScriptErrors();
 });
 
@@ -321,7 +340,7 @@ test('pressing Enter on a focused on-screen key only presses that key', function
     $page->keys('#keyboard [data-key="R"]', ['Enter']);
 
     expect(rowLetters($page, 0))->toBe('tiger');
-    $page->assertSeeNothingIn('.message')
+    $page->assertSeeNothingIn('.message span')
         ->assertPresent('#game > .row:nth-of-type(1).current')
         ->assertNoJavaScriptErrors();
 });

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\GameController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 use Laravel\WorkOS\Http\Requests\AuthKitAuthenticationRequest;
@@ -19,7 +20,7 @@ Route::post('/guesses', [GameController::class, 'guess'])
     ->middleware('throttle:guesses')
     ->block();
 
-Route::get('/login', fn (AuthKitLoginRequest $request): Response => $request->redirect())
+Route::get('/login', fn (AuthKitLoginRequest $request): Response => $request->redirect($request->boolean('signup') ? ['screenHint' => 'sign-up'] : []))
     ->middleware('guest')
     ->name('login');
 
@@ -33,13 +34,15 @@ Route::get('/authenticate', function (AuthKitAuthenticationRequest $request): Re
     }
 
     try {
-        $request->authenticate();
+        $user = $request->authenticate();
+        assert($user instanceof User);
+        GameController::carryOver($request, $user);
     } catch (WorkOSException $exception) {
         report($exception);
     }
 
     return redirect('/');
-})->middleware('guest');
+})->middleware('guest')->block();
 
 // Refreshing the WorkOS tokens first lets logout end the WorkOS session too, not just ours.
 Route::post('/logout', fn (AuthKitLogoutRequest $request): Response => $request->logout())

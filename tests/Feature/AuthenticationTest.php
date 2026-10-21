@@ -20,41 +20,15 @@ afterEach(function () {
     Client::setRequestClient(null);
 });
 
-/**
- * Answer WorkOS's code exchange for the given code with the given WorkOS user.
- */
-function workOsAuthenticates(string $code, string $workosId, string $email): void
-{
-    $requestClient = Mockery::mock(RequestClientInterface::class);
-    $requestClient->shouldReceive('request')
-        ->once()
-        ->withArgs(fn (string $method, string $url, ?array $headers, ?array $params): bool => $url === 'https://api.workos.com/user_management/authenticate'
-            && $params['code'] === $code)
-        ->andReturn([json_encode([
-            'user' => [
-                'object' => 'user',
-                'id' => $workosId,
-                'email' => $email,
-                'first_name' => 'Ada',
-                'last_name' => 'Lovelace',
-                'email_verified' => true,
-                'profile_picture_url' => null,
-                'created_at' => '2026-10-21T00:00:00.000Z',
-                'updated_at' => '2026-10-21T00:00:00.000Z',
-            ],
-            'organization_id' => null,
-            'access_token' => 'access-token',
-            'refresh_token' => 'refresh-token',
-        ]), [], 200]);
-
-    Client::setRequestClient($requestClient);
-}
-
 test('a guest is sent to AuthKit to log in', function () {
     get('/login')
         ->assertRedirectContains('https://api.workos.com/user_management/authorize')
         ->assertRedirectContains('client_id=client_test')
         ->assertSessionHas('state');
+});
+
+test('a guest is sent to AuthKit\'s sign-up screen to create an account', function () {
+    get('/login?signup=1')->assertRedirectContains('screen_hint=sign-up');
 });
 
 test('the callback registers and signs in a new player', function () {
