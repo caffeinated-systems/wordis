@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Illuminate\Support\Facades\Exceptions;
 use WorkOS\Client;
+use WorkOS\Exception\BadRequestException;
 use WorkOS\RequestClient\RequestClientInterface;
 
 use function Pest\Laravel\actingAs;
@@ -81,6 +83,33 @@ test('the callback signs in an existing player by their WorkOS id', function () 
     assertAuthenticatedAs($user);
 });
 
+test('the callback signs in a player recreated in WorkOS by their email', function () {
+    $user = User::factory()->create(['workos_id' => 'user_deleted', 'email' => 'ada@example.com']);
+    workOsAuthenticates('the-code', 'user_recreated', 'ada@example.com');
+
+    withSession(['state' => json_encode(['state' => 'abc'])])
+        ->get('/authenticate?code=the-code&state='.urlencode(json_encode(['state' => 'abc'])))
+        ->assertRedirect('/');
+
+    assertDatabaseCount('users', 1);
+    expect($user->refresh()->workos_id)->toBe('user_recreated');
+    assertAuthenticatedAs($user);
+});
+
+test('a WorkOS error at the callback is reported and the player is sent home as a guest', function () {
+    Exceptions::fake();
+    $requestClient = Mockery::mock(RequestClientInterface::class);
+    $requestClient->shouldReceive('request')->once()->andReturn([json_encode(['error' => 'invalid_grant']), [], 400]);
+    Client::setRequestClient($requestClient);
+
+    withSession(['state' => json_encode(['state' => 'abc'])])
+        ->get('/authenticate?code=expired&state='.urlencode(json_encode(['state' => 'abc'])))
+        ->assertRedirect('/');
+
+    assertGuest();
+    Exceptions::assertReported(BadRequestException::class);
+});
+
 test('the callback refuses a state that does not match the session', function () {
     withSession(['state' => json_encode(['state' => 'abc'])])
         ->get('/authenticate?code=the-code&state='.urlencode(json_encode(['state' => 'forged'])))
@@ -92,6 +121,12 @@ test('the callback refuses a state that does not match the session', function ()
 test('logging out signs the player out', function () {
     actingAs(User::factory()->create());
 
+    post('/logout')->assertRedirect('/');
+
+    assertGuest();
+});
+
+test('a guest whose session already ended is sent home by log out', function () {
     post('/logout')->assertRedirect('/');
 
     assertGuest();

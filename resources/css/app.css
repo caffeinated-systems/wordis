@@ -232,10 +232,15 @@ output:empty {
     }
 }
 
+/* The link sits in the gap under the logo, so it takes no height from the board */
+header {
+    position: relative;
+}
+
 .account {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 0.5rem;
+    position: absolute;
+    top: 100%;
+    right: 0;
 }
 
 .account a,

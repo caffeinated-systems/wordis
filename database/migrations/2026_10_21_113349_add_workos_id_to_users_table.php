@@ -27,7 +27,6 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropUnique(['workos_id']);
             $table->dropColumn('workos_id');
-            $table->string('password')->nullable(false)->change();
         });
     }
 };
