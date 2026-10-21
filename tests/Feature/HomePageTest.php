@@ -21,14 +21,14 @@ test('the home page renders the game without the answer', function () {
         ->assertDontSee('tiger');
 });
 
-test('the header offers a guest to log in and a signed-in player to log out', function () {
+test('the header offers a guest to log in and a signed-in player their history and to log out', function () {
     Answer::factory()->today()->create();
 
-    get('/')->assertSee('Log in')->assertDontSee('Log out');
+    get('/')->assertSee('Log in')->assertDontSee('Log out')->assertDontSee(route('history'));
 
     actingAs(User::factory()->create());
 
-    get('/')->assertSee('Log out')->assertDontSee('Log in');
+    get('/')->assertSee('Log out')->assertDontSee('Log in')->assertSee('href="'.route('history').'"', false);
 });
 
 test('the privacy page says what is kept and who to ask about it', function () {

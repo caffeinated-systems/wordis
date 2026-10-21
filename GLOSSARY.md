@@ -31,3 +31,7 @@ _Avoid_: anonymous user, visitor
 **Account**:
 What a player registers for and signs in to. It keeps their games across devices.
 _Avoid_: profile, login
+
+**Streak**:
+A run of consecutive days on which the player finished a game, won or lost. A missed day or an unfinished game ends it. The current streak is the one still running: today ends it only once the day is over.
+_Avoid_: win streak, run

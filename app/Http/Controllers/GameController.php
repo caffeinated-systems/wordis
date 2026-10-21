@@ -6,7 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Answer;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Closure;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -81,6 +83,68 @@ class GameController extends Controller
                 ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
             ]);
         });
+    }
+
+    /**
+     * Show the signed-in player's played Games for one month, with all-time stats.
+     *
+     * A Game with no guesses counts as not played. Today's answer stays hidden until today's Game is finished.
+     */
+    public function history(Request $request, #[CurrentUser] User $user): View
+    {
+        $today = today()->toDateString();
+        $games = [];
+
+        // ponytail: scores every Game on each view, about 365 a year per player; keep stats on the Game if that ever shows up slow.
+        foreach ($user->games()->orderBy('date')->get() as $game) {
+            if ($game->guesses === []) {
+                continue;
+            }
+
+            $answer = Answer::for($game->date);
+            $outcome = in_array($answer, $game->guesses, true) ? 'won' : (self::isLost($game->guesses, $answer) ? 'lost' : 'unfinished');
+
+            $games[$game->date] = [
+                'rows' => array_map(fn (string $guess): array => ['word' => $guess, 'statuses' => self::score($guess, $answer)], $game->guesses),
+                'outcome' => $outcome,
+                'answer' => $outcome === 'unfinished' && $game->date === $today ? null : $answer,
+            ];
+        }
+
+        $thisMonth = today()->format('Y-m');
+        $firstMonth = substr(array_key_first($games) ?? $thisMonth, 0, 7);
+        $month = $request->query('month');
+
+        if (! is_string($month) || ! preg_match('/^\d{4}-(0[1-9]|1[0-2])\z/', $month) || $month < $firstMonth || $month > $thisMonth) {
+            $month = $thisMonth;
+        }
+
+        $start = CarbonImmutable::parse("{$month}-01");
+        $cells = array_fill(0, $start->dayOfWeekIso - 1, null);
+
+        for ($day = $start; $day->month === $start->month; $day = $day->addDay()) {
+            $cells[] = ['date' => $day->toDateString(), 'day' => $day->day, 'game' => $games[$day->toDateString()] ?? null];
+        }
+
+        $won = array_filter($games, fn (array $game): bool => $game['outcome'] === 'won');
+        // Today's unfinished Game isn't lost yet, so it doesn't count against the win rate.
+        $decided = count($games) - (($games[$today]['outcome'] ?? null) === 'unfinished' ? 1 : 0);
+
+        return view('history', [
+            'month' => $start,
+            'previousMonth' => $month > $firstMonth ? $start->subMonth()->format('Y-m') : null,
+            'nextMonth' => $month < $thisMonth ? $start->addMonth()->format('Y-m') : null,
+            'today' => $today,
+            'firstPlayed' => array_key_first($games),
+            'cells' => $cells,
+            'stats' => [
+                'played' => count($games),
+                'winRate' => $decided === 0 ? 0 : (int) round(count($won) / $decided * 100),
+                ...self::streaks(array_keys(array_filter($games, fn (array $game): bool => $game['outcome'] !== 'unfinished'))),
+                'distribution' => array_replace(array_fill(1, self::GUESSES_ALLOWED, 0), array_count_values(array_map(fn (array $game): int => count($game['rows']), $won)))
+                    + ['lost' => count(array_filter($games, fn (array $game): bool => $game['outcome'] === 'lost'))],
+            ],
+        ]);
     }
 
     /**
@@ -160,6 +224,34 @@ class GameController extends Controller
         }
 
         $request->user()->games()->updateOrCreate(['date' => $game['date']], ['guesses' => $game['guesses']]);
+    }
+
+    /**
+     * Count runs of consecutive days with a finished Game. Today doesn't break the current streak until it's over.
+     *
+     * @param  list<string>  $finishedDates  ascending Y-m-d dates
+     * @return array{currentStreak: int, bestStreak: int}
+     */
+    private static function streaks(array $finishedDates): array
+    {
+        $best = 0;
+        $run = 0;
+        $previous = null;
+
+        foreach ($finishedDates as $date) {
+            $run = $previous !== null && CarbonImmutable::parse($previous)->addDay()->toDateString() === $date ? $run + 1 : 1;
+            $best = max($best, $run);
+            $previous = $date;
+        }
+
+        $finished = array_flip($finishedDates);
+        $day = isset($finished[today()->toDateString()]) ? today()->toImmutable() : today()->toImmutable()->subDay();
+
+        for ($current = 0; isset($finished[$day->toDateString()]); $current++) {
+            $day = $day->subDay();
+        }
+
+        return ['currentStreak' => $current, 'bestStreak' => $best];
     }
 
     /**

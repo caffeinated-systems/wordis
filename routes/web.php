@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use WorkOS\Exception\WorkOSException;
 
 Route::get('/', [GameController::class, 'show'])->block();
+Route::get('/history', [GameController::class, 'history'])->middleware('auth')->name('history');
 Route::view('/privacy', 'privacy')->name('privacy')->block();
 
 // Blocking queues a session's guesses and the pages a player opens mid-guess, so none writes back a stale Game over another's.
