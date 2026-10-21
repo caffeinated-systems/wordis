@@ -88,15 +88,15 @@ export default function game() {
                 ?? tiles.find((tile) => tile.status === 'absent');
         },
         onPhysicalKey(event: KeyboardEvent): void {
-            // Enter on a focused on-screen key has already pressed that key.
-            if (event.key === 'Enter' && (event.target as Element).closest('.key')) {
+            // Enter on a focused on-screen key, link or button has already activated it, so it isn't a guess.
+            if (event.key === 'Enter' && (event.target as Element).closest('a, button')) {
                 return;
             }
             this.onKeyPress(event.key);
         },
         keepFocusOffKeys(event: MouseEvent): void {
-            // A tap must not leave a key focused, or a physical Enter would press it again.
-            // Tab still focuses keys for players who use them from the keyboard.
+            // A tap must not leave a key or footer link focused, or a physical Enter would press it again instead of guessing.
+            // Tab still focuses them for players who use them from the keyboard.
             event.preventDefault();
             (document.activeElement as HTMLElement | null)?.blur();
         },
