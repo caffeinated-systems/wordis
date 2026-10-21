@@ -189,13 +189,24 @@ output.correct {
     text-shadow: 0 0 12px rgba(38, 246, 110, 0.42);
 }
 
+/* The bubble lets clicks through to the board, except on its link */
+.save-result {
+    display: block;
+    margin-top: 6px;
+    pointer-events: auto;
+    font-size: 14px;
+    color: white;
+    text-shadow: none;
+    text-underline-offset: 2px;
+}
+
 /* Hidden rather than display: none, so screen readers keep the live region and announce new messages */
-output:empty {
+output:has(> span:empty) {
     opacity: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    output:not(:empty) {
+    output:has(> span:not(:empty)) {
         animation: pop .15s ease-out;
     }
 }

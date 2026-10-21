@@ -28,7 +28,14 @@
                 </h1>
             </header>
             <div id="game">
-                <output class="message" :class="{ 'invalid': errors, 'correct': won }" x-text="message"></output>
+                <output class="message" :class="{ 'invalid': errors, 'correct': won }">
+                    <span x-text="message"></span>
+                    @guest
+                        <template x-if="state === 'complete' && !errors">
+                            <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
+                        </template>
+                    @endguest
+                </output>
                 <template x-for="(row, index) in board">
                     <div class="row" :class="{ 'current': currentRowIndex === index, 'invalid': currentRowIndex === index && errors}">
                         <template x-for="tile in row">

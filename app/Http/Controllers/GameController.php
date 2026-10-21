@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Answer;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -24,17 +26,15 @@ class GameController extends Controller
     public const int GUESSES_ALLOWED = 5;
 
     /**
-     * Show the player's Game, starting today's when the session's Game belongs to an earlier answer.
+     * Show the player's Game, starting today's when they have none or theirs belongs to an earlier answer.
      */
     public function show(Request $request): View
     {
         $game = self::game($request);
 
-        if ($game['date'] !== today()->toDateString()) {
-            $game = ['date' => today()->toDateString(), 'guesses' => []];
+        if ($game === null || $game['date'] !== today()->toDateString()) {
+            $game = self::start($request);
         }
-
-        $request->session()->put('game', $game);
 
         $answer = Answer::for($game['date']);
 
@@ -59,37 +59,103 @@ class GameController extends Controller
             'row' => ['required', 'integer'],
         ]);
 
-        $game = self::game($request);
-        $answer = Answer::for($game['date']);
+        // The transaction holds the account's Game locked, so another device's guess can't write over this one.
+        return DB::transaction(function () use ($request): JsonResponse {
+            $game = self::game($request) ?? ['date' => today()->toDateString(), 'guesses' => []];
+            $answer = Answer::for($game['date']);
 
-        // The server counts the guesses; the row only stops a stale tab or a retried request from recording a guess the player didn't mean for this one.
-        abort_if(
-            in_array($answer, $game['guesses'], true)
-            || count($game['guesses']) >= self::GUESSES_ALLOWED
-            || $request->integer('row') !== count($game['guesses']) + 1,
-            409,
-            'This game moved on',
-        );
+            // The server counts the guesses; the row only stops a stale tab or a retried request from recording a guess the player didn't mean for this one.
+            abort_if(
+                self::isFinished($game['guesses'], $answer) || $request->integer('row') !== count($game['guesses']) + 1,
+                409,
+                'This game moved on',
+            );
 
-        $guess = $request->string('guess')->lower()->value();
-        $game['guesses'][] = $guess;
-        $request->session()->put('game', $game);
+            $guess = $request->string('guess')->lower()->value();
+            $game['guesses'][] = $guess;
+            self::save($request, $game);
 
-        return response()->json([
-            'statuses' => self::score($guess, $answer),
-            ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
-        ]);
+            return response()->json([
+                'statuses' => self::score($guess, $answer),
+                ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
+            ]);
+        });
     }
 
     /**
-     * The session's Game, or a new one for today when the session has none.
+     * Move a guest's Game onto the account they just signed in to, unless the account's Game for that answer should win:
+     * an account Game with guesses is kept, unless the guest finished theirs and the account hasn't.
+     */
+    public static function carryOver(Request $request, User $user): void
+    {
+        /** @var Game|null $guestGame */
+        $guestGame = $request->session()->pull('game');
+
+        if ($guestGame === null || $guestGame['guesses'] === []) {
+            return;
+        }
+
+        $accountGame = $user->games()->firstOrNew(['date' => $guestGame['date']], ['guesses' => []]);
+        $answer = Answer::for($guestGame['date']);
+
+        if ($accountGame->guesses === [] || (self::isFinished($guestGame['guesses'], $answer) && ! self::isFinished($accountGame->guesses, $answer))) {
+            $accountGame->fill(['guesses' => $guestGame['guesses']])->save();
+        }
+    }
+
+    /**
+     * The player's latest Game: the account's for a signed-in player, the session's for a guest.
+     *
+     * @return Game|null
+     */
+    private static function game(Request $request): ?array
+    {
+        if ($request->user() === null) {
+            /** @var Game|null */
+            return $request->session()->get('game');
+        }
+
+        $game = $request->user()->games()->latest('date')->lockForUpdate()->first();
+
+        return $game?->only(['date', 'guesses']);
+    }
+
+    /**
+     * Start today's Game, or pick up the one another device already started.
      *
      * @return Game
      */
-    private static function game(Request $request): array
+    private static function start(Request $request): array
     {
-        /** @var Game */
-        return $request->session()->get('game', ['date' => today()->toDateString(), 'guesses' => []]);
+        if ($request->user() === null) {
+            $request->session()->put('game', $game = ['date' => today()->toDateString(), 'guesses' => []]);
+
+            return $game;
+        }
+
+        return $request->user()->games()->firstOrCreate(['date' => today()->toDateString()], ['guesses' => []])->only(['date', 'guesses']);
+    }
+
+    /**
+     * @param  Game  $game
+     */
+    private static function save(Request $request, array $game): void
+    {
+        if ($request->user() === null) {
+            $request->session()->put('game', $game);
+
+            return;
+        }
+
+        $request->user()->games()->updateOrCreate(['date' => $game['date']], ['guesses' => $game['guesses']]);
+    }
+
+    /**
+     * @param  list<string>  $guesses
+     */
+    private static function isFinished(array $guesses, string $answer): bool
+    {
+        return in_array($answer, $guesses, true) || count($guesses) >= self::GUESSES_ALLOWED;
     }
 
     /**

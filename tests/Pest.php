@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Tests\TestCase;
+use WorkOS\Client;
+use WorkOS\RequestClient\RequestClientInterface;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,4 +73,34 @@ function tileStatuses(PendingAwaitablePage $page, int $rowIndex): array
 function rowLetters(PendingAwaitablePage $page, int $rowIndex): string
 {
     return $page->script("document.querySelectorAll('#game > .row')[{$rowIndex}].textContent.replace(/\\s/g, '')");
+}
+
+/**
+ * Answer WorkOS's code exchange for the given code with the given WorkOS user.
+ */
+function workOsAuthenticates(string $code, string $workosId, string $email): void
+{
+    $requestClient = Mockery::mock(RequestClientInterface::class);
+    $requestClient->shouldReceive('request')
+        ->once()
+        ->withArgs(fn (string $method, string $url, ?array $headers, ?array $params): bool => $url === 'https://api.workos.com/user_management/authenticate'
+            && $params['code'] === $code)
+        ->andReturn([json_encode([
+            'user' => [
+                'object' => 'user',
+                'id' => $workosId,
+                'email' => $email,
+                'first_name' => 'Ada',
+                'last_name' => 'Lovelace',
+                'email_verified' => true,
+                'profile_picture_url' => null,
+                'created_at' => '2026-10-21T00:00:00.000Z',
+                'updated_at' => '2026-10-21T00:00:00.000Z',
+            ],
+            'organization_id' => null,
+            'access_token' => 'access-token',
+            'refresh_token' => 'refresh-token',
+        ]), [], 200]);
+
+    Client::setRequestClient($requestClient);
 }
