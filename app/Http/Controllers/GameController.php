@@ -59,7 +59,8 @@ class GameController extends Controller
             'row' => ['required', 'integer'],
         ]);
 
-        // The transaction holds the account's Game locked, so another device's guess can't write over this one.
+        // The transaction locks the account's Game, so another device's guess can't write over this one.
+        // SQLite ignores the lock but fails the later of two writes instead, and its retry gets a 409.
         return DB::transaction(function () use ($request): JsonResponse {
             $game = self::game($request) ?? ['date' => today()->toDateString(), 'guesses' => []];
             $answer = Answer::for($game['date']);
@@ -95,12 +96,17 @@ class GameController extends Controller
             return;
         }
 
-        $accountGame = $user->games()->firstOrNew(['date' => $guestGame['date']], ['guesses' => []]);
         $answer = Answer::for($guestGame['date']);
 
-        if ($accountGame->guesses === [] || (self::isFinished($guestGame['guesses'], $answer) && ! self::isFinished($accountGame->guesses, $answer))) {
-            $accountGame->fill(['guesses' => $guestGame['guesses']])->save();
-        }
+        // Locked like a guess, so a guess another device makes meanwhile isn't written over.
+        DB::transaction(function () use ($user, $guestGame, $answer): void {
+            $accountGame = $user->games()->where('date', $guestGame['date'])->lockForUpdate()->first()
+                ?? $user->games()->createOrFirst(['date' => $guestGame['date']], ['guesses' => $guestGame['guesses']]);
+
+            if ($accountGame->guesses === [] || (self::isFinished($guestGame['guesses'], $answer) && ! self::isFinished($accountGame->guesses, $answer))) {
+                $accountGame->update(['guesses' => $guestGame['guesses']]);
+            }
+        });
     }
 
     /**
