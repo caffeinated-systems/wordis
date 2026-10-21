@@ -555,9 +555,12 @@ footer a:focus-visible {
     color: #2a3b57;
 }
 
+.day.future > a {
+    place-items: center;
+}
+
 .day.today .day-number {
     color: #6ba0e2;
-    text-decoration: none;
 }
 
 .day.today {
@@ -592,7 +595,7 @@ footer a:focus-visible {
         padding: 5px;
     }
 
-    .day > a .day-number,
+    .day:not(.future) > a .day-number,
     .day > button .day-number {
         display: none;
     }

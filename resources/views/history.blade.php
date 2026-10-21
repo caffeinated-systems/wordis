@@ -81,7 +81,7 @@
                             'today' => $cell['date'] === $today,
                         ]) style="--order: {{ $index }}">
                             @if ($game === null && $cell['date'] === $today)
-                                <a href="/" class="day-number" aria-label="{{ $label }}. Play today's game">{{ $cell['day'] }}</a>
+                                <a href="/" aria-label="{{ $label }}. Play today's game"><span class="day-number" aria-hidden="true">{{ $cell['day'] }}</span></a>
                             @elseif ($game === null)
                                 <span class="day-number" aria-label="{{ $label }}">{{ $cell['day'] }}</span>
                             @else
