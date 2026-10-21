@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\Answer;
+use App\Models\User;
 
+use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
 test('the home page renders the game without the answer', function () {
@@ -17,4 +19,14 @@ test('the home page renders the game without the answer', function () {
         ->assertSee('id="keyboard"', false)
         ->assertSee('/build/assets/app-', false)
         ->assertDontSee('tiger');
+});
+
+test('the header offers a guest to log in and a signed-in player to log out', function () {
+    Answer::factory()->today()->create();
+
+    get('/')->assertSee('Log in')->assertDontSee('Log out');
+
+    actingAs(User::factory()->create());
+
+    get('/')->assertSee('Log out')->assertDontSee('Log in');
 });

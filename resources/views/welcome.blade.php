@@ -12,6 +12,16 @@
     <body>
         <main  x-data="game()" @keyup.window="onPhysicalKey($event)" >
             <header>
+                <nav class="account">
+                    @auth
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit">Log out</button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}">Log in</a>
+                    @endauth
+                </nav>
                 <h1 aria-label="Wordis">
                     <img id="wordis-logo" src='/assets/wordis-logo.svg' alt='Wordis' width="4460" height="995" />
                 </h1>
