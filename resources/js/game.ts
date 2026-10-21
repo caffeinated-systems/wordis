@@ -16,7 +16,13 @@ type GuessResult = {
     answer?: string;
 };
 
-export default function game() {
+// The Game the server has recorded so far, so a reload resumes it.
+export type SavedGame = {
+    guesses: { word: string; statuses: TileStatus[] }[];
+    answer?: string;
+};
+
+export default function game(saved: SavedGame = { guesses: [] }) {
     return {
         guessesAllowed: 5,
         wordLength: 5,
@@ -79,6 +85,14 @@ export default function game() {
             this.board = Array.from({ length: this.guessesAllowed }, () => {
                 return Array.from({ length: this.wordLength }, (item, index) => new Tile(index));
             });
+            saved.guesses.forEach(({ word, statuses }, index) => {
+                [...word].forEach((letter) => this.fillTile(letter));
+                this.applyResult({ statuses, answer: index === saved.guesses.length - 1 ? saved.answer : undefined }, false);
+            });
+            // A Game in progress resumes quietly; a finished one shows its message again.
+            if (this.state === 'active') {
+                this.message = '';
+            }
         },
         matchingTileForKey(key: string): Tile | undefined {
             const tiles = this.board.flat().filter((tile) => tile.letter === key.toLowerCase());
@@ -148,12 +162,24 @@ export default function game() {
             try {
                 const response = await fetch('/guesses', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                    body: JSON.stringify({ guess: this.currentGuess, attempt: this.currentRowIndex + 1 }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
+                    },
+                    body: JSON.stringify({ guess: this.currentGuess, row: this.currentRowIndex + 1 }),
                 });
+                if (response.status === 409) {
+                    // Another tab, a new day or an earlier try of this guess already moved the Game on.
+                    this.state = 'complete';
+                    this.errors = true;
+                    this.message = 'This game moved on, reload the page';
+                    return;
+                }
                 if (!response.ok) {
                     this.errors = true;
                     this.message = response.status === 422 ? 'Not in word list'
+                        : response.status === 419 ? 'Your session expired, reload the page'
                         : response.status === 429 ? 'Slow down a bit'
                         : 'Something went wrong, try again';
                     return;
@@ -166,17 +192,20 @@ export default function game() {
                 this.checking = false;
             }
         },
-        applyResult({ statuses, answer }: GuessResult): void {
+        applyResult({ statuses, answer }: GuessResult, celebrate = true): void {
             this.currentRow.forEach((tile, index) => tile.status = statuses[index]);
 
             if (statuses.every((status) => status === 'correct')) {
                 this.state = 'complete';
                 this.won = true;
                 this.message = this.wins[this.currentRowIndex];
-                confetti();
-            } else if (this.remainingGuesses === 0) {
+                if (celebrate) {
+                    confetti();
+                }
+            } else if (answer) {
+                // The server reveals the answer only when the Game is lost.
                 this.state = 'complete';
-                this.answer = answer ?? '';
+                this.answer = answer;
                 this.message = `Ha ha, sucka! It was ${this.answer.toUpperCase()}`;
             } else {
                 this.currentRowIndex++;

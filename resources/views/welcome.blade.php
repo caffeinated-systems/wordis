@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>Wordis</title>
         <link rel="icon" href="/favicon.ico" sizes="32x32">
@@ -10,7 +11,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
     </head>
     <body>
-        <main  x-data="game()" @keyup.window="onPhysicalKey($event)" >
+        <main  x-data="game(@js($game))" @keyup.window="onPhysicalKey($event)" >
             <header>
                 <nav class="account">
                     @auth

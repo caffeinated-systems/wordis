@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\GuessController;
+use App\Http\Controllers\GameController;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 use Laravel\WorkOS\Http\Requests\AuthKitAuthenticationRequest;
@@ -11,13 +11,13 @@ use Laravel\WorkOS\Http\Requests\AuthKitLogoutRequest;
 use Symfony\Component\HttpFoundation\Response;
 use WorkOS\Exception\WorkOSException;
 
-Route::view('/', 'welcome');
-Route::view('/privacy', 'privacy')->name('privacy');
+Route::get('/', [GameController::class, 'show'])->block();
+Route::view('/privacy', 'privacy')->name('privacy')->block();
 
-// Scoring a guess changes nothing, so it skips sessions and CSRF and doesn't wake the database for a session.
-Route::post('/guesses', GuessController::class)
-    ->withoutMiddleware('web')
-    ->middleware('throttle:guesses');
+// Blocking queues a session's guesses and the pages a player opens mid-guess, so none writes back a stale Game over another's.
+Route::post('/guesses', [GameController::class, 'guess'])
+    ->middleware('throttle:guesses')
+    ->block();
 
 Route::get('/login', fn (AuthKitLoginRequest $request): Response => $request->redirect())
     ->middleware('guest')
