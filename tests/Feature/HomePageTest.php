@@ -30,3 +30,10 @@ test('the header offers a guest to log in and a signed-in player to log out', fu
 
     get('/')->assertSee('Log out')->assertDontSee('Log in');
 });
+
+test('the privacy page says what is kept and who to ask about it', function () {
+    get('/privacy')
+        ->assertOk()
+        ->assertSee('<title>Privacy · Wordis</title>', false)
+        ->assertSee('mailto:daniel.j.floris@gmail.com', false);
+});

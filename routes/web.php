@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use WorkOS\Exception\WorkOSException;
 
 Route::view('/', 'welcome');
+Route::view('/privacy', 'privacy')->name('privacy');
 
 // Scoring a guess changes nothing, so it skips sessions and CSRF and doesn't wake the database for a session.
 Route::post('/guesses', GuessController::class)
