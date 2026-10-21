@@ -224,20 +224,15 @@ test('reloading a finished Game shows it finished', function () {
     expect(rowLetters($page, 4))->toBe('teeth');
 });
 
-test('a Game lost from another tab shows the answer', function () {
+test('a guess the server counts for another row asks for a reload', function () {
     $page = visit('/');
 
-    $page->script(<<<'JS'
-        (async () => {
-            for (const guess of ['crane', 'house', 'apple', 'route']) {
-                await fetch('/guesses', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ guess }) });
-            }
-        })()
-    JS);
-    guess($page, 'teeth');
+    $page->script("fetch('/guesses', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ guess: 'crane' }) })");
+    guess($page, 'house');
 
-    $page->assertSeeIn('.message', 'Ha ha, sucka! It was TIGER')
+    $page->assertSeeIn('.message', 'This game changed in another tab, reload the page')
         ->assertNoJavaScriptErrors();
+    expect(tileStatuses($page, 0))->each->toBe('');
 });
 
 test('a won game ignores further keys', function () {

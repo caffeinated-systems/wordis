@@ -12,9 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 use WorkOS\Exception\WorkOSException;
 
 Route::get('/', [GameController::class, 'show'])->block();
-Route::view('/privacy', 'privacy')->name('privacy');
+Route::view('/privacy', 'privacy')->name('privacy')->block();
 
-// Blocking queues a session's page loads and guesses, so neither writes back a stale Game over the other's.
+// Blocking queues a session's guesses and the pages a player opens mid-guess, so none writes back a stale Game over another's.
 Route::post('/guesses', [GameController::class, 'guess'])
     ->middleware('throttle:guesses')
     ->block();

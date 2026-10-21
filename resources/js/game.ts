@@ -12,6 +12,7 @@ export function heat(statuses: TileStatus[]): Heat {
 }
 
 type GuessResult = {
+    guess?: number;
     statuses: TileStatus[];
     answer?: string;
 };
@@ -178,7 +179,15 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                         : 'Something went wrong, try again';
                     return;
                 }
-                this.applyResult(await response.json());
+                const result: GuessResult = await response.json();
+                // The server counted this guess for another row: another tab moved the Game on, or a new day started it over.
+                if (result.guess !== this.currentRowIndex + 1) {
+                    this.state = 'complete';
+                    this.errors = true;
+                    this.message = 'This game changed in another tab, reload the page';
+                    return;
+                }
+                this.applyResult(result);
             } catch {
                 this.errors = true;
                 this.message = 'Something went wrong, try again';
@@ -197,15 +206,10 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                     confetti();
                 }
             } else if (answer) {
-                // The server reveals the answer only when the Game is lost, even if another tab made the earlier guesses.
+                // The server reveals the answer only when the Game is lost.
                 this.state = 'complete';
                 this.answer = answer;
                 this.message = `Ha ha, sucka! It was ${this.answer.toUpperCase()}`;
-            } else if (this.remainingGuesses === 0) {
-                // Out of rows but not lost: another tab moved the Game on, or a new day started it over.
-                this.state = 'complete';
-                this.errors = true;
-                this.message = 'This game changed in another tab, reload the page';
             } else {
                 this.currentRowIndex++;
                 const disses = this.disses[heat(statuses)];

@@ -17,7 +17,7 @@ beforeEach(function () {
 test('a guess is scored letter by letter against today\'s answer', function (string $guess, array $statuses) {
     postJson('/guesses', ['guess' => $guess])
         ->assertOk()
-        ->assertExactJson(['statuses' => $statuses]);
+        ->assertExactJson(['guess' => 1, 'statuses' => $statuses]);
 })->with([
     'a wrong guess' => ['tribe', ['correct', 'present', 'present', 'absent', 'present']],
     'a letter already correct elsewhere' => ['tight', ['correct', 'correct', 'correct', 'absent', 'absent']],
@@ -53,7 +53,8 @@ test('a fifth guess that wins does not reveal the answer as a loss', function ()
 });
 
 test('the server counts the guesses, whatever the client says', function () {
-    postJson('/guesses', ['guess' => 'crane', 'attempt' => 5])->assertJsonMissingPath('answer');
+    postJson('/guesses', ['guess' => 'crane', 'attempt' => 5])->assertJsonPath('guess', 1)->assertJsonMissingPath('answer');
+    postJson('/guesses', ['guess' => 'house'])->assertJsonPath('guess', 2);
 });
 
 test('a finished Game takes no more guesses', function (array $guesses) {
@@ -101,7 +102,7 @@ test('a guess after midnight is scored against the answer the Game started on', 
 
     travelTo(today()->addDay()->setTime(0, 1));
 
-    postJson('/guesses', ['guess' => 'tiger'])->assertExactJson(['statuses' => array_fill(0, 5, 'correct')]);
+    postJson('/guesses', ['guess' => 'tiger'])->assertExactJson(['guess' => 1, 'statuses' => array_fill(0, 5, 'correct')]);
 });
 
 test('the first page load after midnight starts the new day\'s Game', function () {
@@ -112,7 +113,7 @@ test('the first page load after midnight starts the new day\'s Game', function (
     travelTo(today()->addDay()->setTime(0, 1));
 
     get('/')->assertViewHas('game', ['guesses' => []]);
-    postJson('/guesses', ['guess' => 'crane'])->assertExactJson(['statuses' => array_fill(0, 5, 'correct')]);
+    postJson('/guesses', ['guess' => 'crane'])->assertExactJson(['guess' => 1, 'statuses' => array_fill(0, 5, 'correct')]);
 });
 
 test('a guess needs the CSRF token from the page', function () {

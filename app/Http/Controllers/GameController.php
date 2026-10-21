@@ -68,6 +68,7 @@ class GameController extends Controller
         $request->session()->put('game', $game);
 
         return response()->json([
+            'guess' => count($game['guesses']),
             'statuses' => self::score($guess, $answer),
             ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
         ]);
