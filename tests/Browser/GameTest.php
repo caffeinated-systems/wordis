@@ -400,25 +400,32 @@ test('the message sits between the board and the keyboard on phones', function (
         ->and($page->script('document.documentElement.scrollWidth'))->toBe(320);
 });
 
-test('the account icon sits in the page corner, clear of the logo and the board', function (bool $signedIn, int $width, int $height) {
+test('the header icons sit in the page corners, clear of the logo and the board', function (bool $signedIn, int $width, int $height) {
     if ($signedIn) {
         actingAs(User::factory()->create());
     }
     $page = visit('/');
     $page->resize($width, $height);
 
+    // History takes the top-left corner and the account icon the top-right.
     expect($page->script(<<<'JS'
         (() => {
-            const icon = document.querySelector('.account a, .account button');
-            const box = icon.getBoundingClientRect();
+            const icons = [...document.querySelectorAll('.account a, .account button')];
             const logo = document.querySelector('#wordis-logo').getBoundingClientRect();
-            return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2).closest('.account a, .account button') === icon
-                && box.left >= logo.right
-                && box.right === document.documentElement.clientWidth - 16
-                && box.top === 16
-                && box.bottom <= document.querySelector('#game').getBoundingClientRect().top - 7;
+            const boardTop = document.querySelector('#game').getBoundingClientRect().top;
+            const width = document.documentElement.clientWidth;
+
+            return icons.map((icon, index) => {
+                const box = icon.getBoundingClientRect();
+                const isAccount = index === icons.length - 1;
+
+                return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2).closest('.account a, .account button') === icon
+                    && (isAccount ? box.left >= logo.right && box.right === width - 16 : box.right <= logo.left && box.left === 16)
+                    && box.top === 16
+                    && box.bottom <= boardTop - 7;
+            });
         })()
-    JS))->toBeTrue();
+    JS))->toBe($signedIn ? [true, true] : [true]);
 })->with(['signed out' => false, 'signed in' => true])->with([
     'small phone' => [320, 640],
     'phone' => [390, 844],
