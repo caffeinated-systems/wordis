@@ -155,7 +155,7 @@ test('a guest who finishes a Game is offered an account to save it', function ()
 
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Create an account to save this result')
+    $page->assertSeeIn('#finished', 'Create an account to save this result')
         ->assertAttributeContains('.save-result', 'href', '/login?signup=1');
 });
 
@@ -205,6 +205,16 @@ test('a lost Game is shared through the share sheet without its answer', functio
         ->toContain(' · X/5 · ⏱ 1:02:05')
         ->toContain('"Ha ha, sucka!"')
         ->not->toContain('TIGER');
+});
+
+test('a finished Game swaps the keyboard for sharing, and the message bubble keeps only the message', function () {
+    $page = visit('/');
+
+    guess($page, 'tiger');
+
+    $page->assertVisible('#finished .share')
+        ->assertMissing('.message .share');
+    expect($page->script("getComputedStyle(document.querySelector('#keyboard')).visibility"))->toBe('hidden');
 });
 
 test('a later win gets its own message', function () {

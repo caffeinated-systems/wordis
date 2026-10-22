@@ -28,14 +28,6 @@
             <div id="game">
                 <output class="message" :class="{ 'invalid': errors, 'correct': won }">
                     <span x-text="message"></span>
-                    <template x-if="state === 'complete' && !errors">
-                        <button class="share" type="button" @click="share()" x-text="shareLabel"></button>
-                    </template>
-                    @guest
-                        <template x-if="state === 'complete' && !errors">
-                            <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
-                        </template>
-                    @endguest
                 </output>
                 <template x-for="(row, index) in board">
                     <div class="row" :class="{ 'current': currentRowIndex === index, 'invalid': currentRowIndex === index && errors}">
@@ -45,19 +37,30 @@
                     </div>
                 </template>
             </div>
-            <div id="keyboard"  @click.stop="onScreenKey($event)" @mousedown="keepFocusOffKeys($event)">
-                <template x-for="row in letters">
-                    <div class="row">
-                        <template x-for="key in row">
-                            <button
-                                class="key"
-                                :class="matchingTileForKey(key)?.status"
-                                type="button"
-                                :data-key="key"
-                                :aria-label="key"
-                                x-text="key === 'Backspace' ? '⌫' : key">
-                            </button>
-                        </template>
+            <div id="dock">
+                <div id="keyboard" :class="{ 'hidden': finished }" @click.stop="onScreenKey($event)" @mousedown="keepFocusOffKeys($event)">
+                    <template x-for="row in letters">
+                        <div class="row">
+                            <template x-for="key in row">
+                                <button
+                                    class="key"
+                                    :class="matchingTileForKey(key)?.status"
+                                    type="button"
+                                    :data-key="key"
+                                    :aria-label="key"
+                                    x-text="key === 'Backspace' ? '⌫' : key">
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                {{-- A finished Game needs no keyboard, so what to do next takes its place without moving the board --}}
+                <template x-if="finished">
+                    <div id="finished">
+                        <button class="share" type="button" @click="share()" x-text="shareLabel"></button>
+                        @guest
+                            <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
+                        @endguest
                     </div>
                 </template>
             </div>

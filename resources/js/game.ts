@@ -93,6 +93,9 @@ export default function game(saved: SavedGame = { guesses: [] }) {
         get currentGuess(): string {
             return this.currentRow.map((tile) => tile.letter).join("");
         },
+        get finished(): boolean {
+            return this.state === 'complete' && !this.errors;
+        },
         get remainingGuesses(): number {
             return this.guessesAllowed - this.currentRowIndex -1;
         },
