@@ -188,7 +188,7 @@ test('a share that fails says so rather than doing nothing', function () {
     guess($page, 'tiger');
     $page->click('.share');
 
-    $page->assertSeeIn('.share', "Couldn't copy");
+    $page->assertSeeIn('.share', "Couldn't share");
 });
 
 test('a lost Game is shared through the share sheet without its answer', function () {

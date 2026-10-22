@@ -235,7 +235,7 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 await navigator.clipboard.writeText(this.shareText);
                 this.shareLabel = 'Copied';
             } catch {
-                this.shareLabel = "Couldn't copy";
+                this.shareLabel = "Couldn't share";
             }
         },
         applyResult({ statuses, answer, seconds }: GuessResult, celebrate = true): void {
