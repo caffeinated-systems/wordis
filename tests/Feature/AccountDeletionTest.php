@@ -11,6 +11,7 @@ use WorkOS\Exception\ServerException;
 use WorkOS\RequestClient\RequestClientInterface;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertAuthenticatedAs;
 use function Pest\Laravel\assertGuest;
 use function Pest\Laravel\assertModelExists;
 use function Pest\Laravel\assertModelMissing;
@@ -74,6 +75,29 @@ test('a WorkOS failure keeps the account and its Games, and sends the player bac
     assertModelExists($user);
     assertModelExists($game);
     Exceptions::assertReported(ServerException::class);
+});
+
+test('a failed local delete keeps the player signed in with everything, so they can retry', function () {
+    config(['session.driver' => 'database']);
+    $user = User::factory()->create(['workos_id' => 'user_leaving']);
+    $game = Game::factory()->for($user)->create();
+    DB::table('sessions')->insert(['id' => 'phone', 'user_id' => $user->id, 'payload' => '', 'last_activity' => time()]);
+    User::deleting(fn () => throw new RuntimeException('Deadlock'));
+    workOsDeletes('user_leaving', 202);
+
+    actingAs($user)->delete('/account')->assertServerError();
+
+    assertAuthenticatedAs($user);
+    assertModelExists($user);
+    assertModelExists($game);
+    expect(DB::table('sessions')->where('id', 'phone')->exists())->toBeTrue();
+
+    User::flushEventListeners();
+    workOsDeletes('user_leaving', 404);
+
+    delete('/account')->assertRedirect('/');
+
+    assertModelMissing($user);
 });
 
 test('a guest cannot delete an account', function () {
