@@ -121,7 +121,7 @@ h1 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 14px;
+    gap: 10px;
 }
 
 .key {
@@ -209,7 +209,7 @@ output.correct {
 
 /* A quiet second choice under Share. */
 .save-result {
-    padding: 8px 18px;
+    padding: 6px 16px;
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.04);
@@ -235,7 +235,7 @@ output.correct {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .countdown-label {
@@ -248,7 +248,7 @@ output.correct {
 /* An old LED clock: the lit digits glow over every segment shown faintly unlit. */
 .readout {
     display: grid;
-    padding: 8px 14px;
+    padding: 5px 12px;
     border-radius: 8px;
     background: #0a0f1a;
     box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8);

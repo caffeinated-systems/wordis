@@ -231,8 +231,10 @@ test('a finished Game swaps the keyboard for sharing, and the message bubble kee
     expect($page->script("getComputedStyle(document.querySelector('#keyboard')).visibility"))->toBe('hidden');
 });
 
-test('a finished Game counts down to the next one', function () {
+test('a finished Game counts down to the next one, quietly and without moving the board', function () {
     $page = visit('/');
+    $page->resize(360, 640);
+    $boardHeight = $page->script("document.querySelector('#game').getBoundingClientRect().height");
 
     guess($page, 'tiger');
     $before = $page->script("document.querySelector('.readout span:last-child').textContent");
@@ -240,19 +242,24 @@ test('a finished Game counts down to the next one', function () {
 
     expect($before)->toMatch('/^\\d{1,2}:\\d{2}(:\\d{2})?$/')
         ->and($page->script("document.querySelector('.readout span:last-child').textContent"))->not->toBe($before);
-    $page->assertMissing('.play-next');
+    $page->assertMissing('.play-next')
+        ->assertAttribute('.countdown', 'role', 'timer');
+    expect($page->script("document.querySelector('#game').getBoundingClientRect().height"))->toBe($boardHeight);
 });
 
-test('once the countdown runs out, the player is offered the new Game', function () {
+test('once the countdown runs out, the player is offered the new Game in its place', function () {
     $page = visit('/');
+    $page->resize(360, 640);
+    $boardHeight = $page->script("document.querySelector('#game').getBoundingClientRect().height");
     guess($page, 'tiger');
 
     // A day on, as a phone woken from sleep would find it.
     $page->script('const now = Date.now; Date.now = () => now() + 86400000; null');
     $page->wait(1.1);
 
-    $page->assertSeeIn('.readout', '0:00')
+    $page->assertMissing('.countdown')
         ->assertSeeIn('#finished .play-next', "Play today's game");
+    expect($page->script("document.querySelector('#game').getBoundingClientRect().height"))->toBe($boardHeight);
 });
 
 test('a later win gets its own message', function () {
