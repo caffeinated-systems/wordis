@@ -46,6 +46,7 @@ class GameController extends Controller
             'guesses' => array_map(fn (string $guess): array => ['word' => $guess, 'statuses' => self::score($guess, $answer)], $game['guesses']),
             ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
             ...self::seconds($game),
+            'nextGameIn' => today()->addDay()->getTimestamp() - now()->getTimestamp(),
         ]]);
     }
 

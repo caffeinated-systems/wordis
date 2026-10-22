@@ -63,6 +63,17 @@
                         @guest
                             <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
                         @endguest
+                        {{-- A timer is not announced as it ticks, so the panel's live region stays quiet. --}}
+                        <div class="countdown" role="timer" aria-live="off">
+                            <span class="countdown-label">Next game available in</span>
+                            <span class="readout">
+                                <span class="unlit" aria-hidden="true" x-text="countdown.replace(/\d/g, '8')"></span>
+                                <span x-text="countdown"></span>
+                            </span>
+                        </div>
+                        <template x-if="!nextGameIn">
+                            <button class="play-next" type="button" @click="location.reload()">Play today's game</button>
+                        </template>
                     </div>
                 </template>
             </div>

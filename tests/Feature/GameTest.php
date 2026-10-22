@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Answer;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -88,13 +89,25 @@ test('malformed guesses are rejected', function (array $payload, string $field) 
 ]);
 
 test('loading the page shows the Game so far', function () {
+    travelTo(today()->setTime(22, 0));
     postJson('/guesses', ['guess' => 'tribe', 'row' => 1]);
 
     get('/')->assertViewHas('game', [
         'day' => today()->format('j M'),
         'guesses' => [['word' => 'tribe', 'statuses' => ['correct', 'present', 'present', 'absent', 'present']]],
+        'nextGameIn' => 7200,
     ]);
 });
+
+test('the page counts down to the next Game at midnight Sydney time, through daylight saving changes', function (string $now, int $nextGameIn) {
+    travelTo(CarbonImmutable::parse($now));
+
+    get('/')->assertViewHas('game', fn (array $game): bool => $game['nextGameIn'] === $nextGameIn);
+})->with([
+    'an ordinary evening' => ['2026-10-22 23:59:30', 30],
+    'the morning clocks go forward' => ['2026-10-04 00:30', 81000],
+    'the morning clocks go back' => ['2027-04-04 00:30', 88200],
+]);
 
 test('loading the page after a lost Game shows the answer', function () {
     foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $index => $guess) {

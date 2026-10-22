@@ -231,6 +231,30 @@ test('a finished Game swaps the keyboard for sharing, and the message bubble kee
     expect($page->script("getComputedStyle(document.querySelector('#keyboard')).visibility"))->toBe('hidden');
 });
 
+test('a finished Game counts down to the next one', function () {
+    $page = visit('/');
+
+    guess($page, 'tiger');
+    $before = $page->script("document.querySelector('.readout span:last-child').textContent");
+    $page->wait(1.1);
+
+    expect($before)->toMatch('/^\\d{1,2}:\\d{2}(:\\d{2})?$/')
+        ->and($page->script("document.querySelector('.readout span:last-child').textContent"))->not->toBe($before);
+    $page->assertMissing('.play-next');
+});
+
+test('once the countdown runs out, the player is offered the new Game', function () {
+    $page = visit('/');
+    guess($page, 'tiger');
+
+    // A day on, as a phone woken from sleep would find it.
+    $page->script('const now = Date.now; Date.now = () => now() + 86400000; null');
+    $page->wait(1.1);
+
+    $page->assertSeeIn('.readout', '0:00')
+        ->assertSeeIn('#finished .play-next', "Play today's game");
+});
+
 test('a later win gets its own message', function () {
     $page = visit('/');
 
