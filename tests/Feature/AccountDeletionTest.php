@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Game;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Exceptions;
 use WorkOS\Client;
 use WorkOS\Exception\ServerException;
@@ -39,9 +40,10 @@ test('a player deletes their WorkOS login, their account and their Games, and is
     $otherGame = Game::factory()->for(User::factory())->create();
     workOsDeletes('user_leaving', 202);
 
-    actingAs($user)->delete('/account')
+    actingAs($user)->withSession(['game' => ['date' => '2026-10-21', 'guesses' => ['crane']]])->delete('/account')
         ->assertRedirect('/')
-        ->assertSessionHas('status', 'Your account was deleted.');
+        ->assertSessionHas('status', 'Your account was deleted.')
+        ->assertSessionMissing('game');
 
     assertGuest();
     assertModelMissing($user);
@@ -79,7 +81,19 @@ test('a guest cannot delete an account', function () {
     $requestClient->shouldNotReceive('request');
     Client::setRequestClient($requestClient);
 
-    delete('/account')->assertRedirect();
+    delete('/account')->assertRedirect(route('login'));
+});
 
-    assertModelExists(User::factory()->create());
+test('deleting an account ends its sessions on other devices', function () {
+    config(['session.driver' => 'database']);
+    $user = User::factory()->create(['workos_id' => 'user_leaving']);
+    DB::table('sessions')->insert([
+        ['id' => 'phone', 'user_id' => $user->id, 'payload' => '', 'last_activity' => time()],
+        ['id' => 'someone-else', 'user_id' => User::factory()->create()->id, 'payload' => '', 'last_activity' => time()],
+    ]);
+    workOsDeletes('user_leaving', 202);
+
+    actingAs($user)->delete('/account')->assertRedirect('/');
+
+    expect(DB::table('sessions')->pluck('id')->all())->not->toContain('phone')->toContain('someone-else');
 });

@@ -8,6 +8,7 @@ use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 use Laravel\WorkOS\Http\Requests\AuthKitAuthenticationRequest;
@@ -73,9 +74,19 @@ Route::delete('/account', function (Request $request, #[CurrentUser] User $user)
         }
     }
 
-    // Logging out saves a fresh remember token, which would re-insert a User deleted first.
+    // If this fails the player stays signed in, and a retry finds the WorkOS login already gone.
+    DB::transaction(function () use ($user): void {
+        // Their other devices' sessions go too, rather than lingering until they expire.
+        if (config('session.driver') === 'database') {
+            DB::table(config()->string('session.table'))->where('user_id', $user->id)->delete();
+        }
+
+        $user->delete();
+    });
+
+    // Logging out saves a fresh remember token, which would re-insert the deleted User.
+    $user->setRememberToken(null);
     Auth::guard('web')->logout();
-    $user->delete();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 

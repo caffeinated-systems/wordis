@@ -114,10 +114,11 @@
 
             <button type="button" class="delete-account" commandfor="delete-account" command="show-modal">Delete account</button>
 
-            <dialog id="delete-account" closedby="any" aria-labelledby="delete-account-title">
+            <dialog id="delete-account" closedby="any" aria-labelledby="delete-account-title" aria-describedby="delete-account-consequence">
                 <h2 id="delete-account-title">Delete your account?</h2>
-                <p>Your sign-in{{ $stats['played'] > 0 ? ' and all '.$stats['played'].' of your '.Str::plural('game', $stats['played']) : '' }} will be deleted for good. This can't be undone.</p>
-                <form method="POST" action="{{ route('account.destroy') }}">
+                <p id="delete-account-consequence">Your sign-in{{ $stats['played'] > 0 ? ' and all '.$stats['played'].' of your '.Str::plural('game', $stats['played']) : '' }} will be deleted for good. This can't be undone.</p>
+                {{-- A second click would arrive signed out and be sent to sign in, so the button only submits once. --}}
+                <form method="POST" action="{{ route('account.destroy') }}" onsubmit="this.querySelector('.delete').disabled = true">
                     @csrf
                     @method('DELETE')
                     <button type="button" class="close" commandfor="delete-account" command="close">Cancel</button>
