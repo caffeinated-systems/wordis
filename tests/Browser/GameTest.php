@@ -181,9 +181,19 @@ test('a finished Game is copied to share where there is no share sheet', functio
     expect($page->script('window.shared'))->toMatch('/^Wordis '.today()->format('j M')." · 2\\/5 · ⏱ 0:0\\d\n\"Show-off\"\n⬛🟨⬛⬛🟨\n🟩🟩🟩🟩🟩\nhttp:\\/\\/[^\n]+\\z/u");
 });
 
+test('a share that fails says so rather than doing nothing', function () {
+    $page = visit('/');
+    $page->script("navigator.share = async () => { throw new DOMException('Blocked', 'NotAllowedError'); }; Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => { throw new DOMException('Denied', 'NotAllowedError'); } } }); null");
+
+    guess($page, 'tiger');
+    $page->click('.share');
+
+    $page->assertSeeIn('.share', "Couldn't copy");
+});
+
 test('a lost Game is shared through the share sheet without its answer', function () {
     $page = visit('/');
-    $page->script("navigator.share = async ({ text }) => { window.shared = text; }; null");
+    $page->script('navigator.share = async ({ text }) => { window.shared = text; }; null');
 
     foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $word) {
         guess($page, $word);

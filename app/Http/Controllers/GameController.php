@@ -79,13 +79,14 @@ class GameController extends Controller
 
             $guess = $request->string('guess')->lower()->value();
             $game['guesses'][] = $guess;
+            $now = now()->getTimestamp();
 
             if (count($game['guesses']) === 1) {
-                $game['started_at'] = now()->getTimestamp();
+                $game['started_at'] = $now;
             }
 
             if (self::isFinished($game['guesses'], $answer)) {
-                $game['finished_at'] = now()->getTimestamp();
+                $game['finished_at'] = $now;
             }
 
             self::save($request, $game);
@@ -247,13 +248,13 @@ class GameController extends Controller
         return [
             'date' => $game->date,
             'guesses' => $game->guesses,
-            'started_at' => $game->started_at?->getTimestamp(),
-            'finished_at' => $game->finished_at?->getTimestamp(),
+            'started_at' => $game->started_at,
+            'finished_at' => $game->finished_at,
         ];
     }
 
     /**
-     * The attributes a Game's row keeps from it. The datetime casts take the Unix timestamps as they are.
+     * The attributes a Game's row keeps from it.
      *
      * @param  Game  $game
      * @return array{guesses: list<string>, started_at: int|null, finished_at: int|null}

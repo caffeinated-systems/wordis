@@ -13,9 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Unix timestamps rather than datetimes: the app runs on Sydney time, whose repeated hour when daylight saving ends would make a Game's time ambiguous.
         Schema::table('games', function (Blueprint $table) {
-            $table->timestamp('started_at')->nullable()->after('guesses');
-            $table->timestamp('finished_at')->nullable()->after('started_at');
+            $table->unsignedInteger('started_at')->nullable()->after('guesses');
+            $table->unsignedInteger('finished_at')->nullable()->after('started_at');
         });
     }
 

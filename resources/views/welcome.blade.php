@@ -6,6 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>Wordis</title>
+        <meta property="og:type" content="website">
         <meta property="og:title" content="Wordis">
         <meta property="og:description" content="Find the day's five-letter word in five guesses.">
         <meta property="og:url" content="{{ url('/') }}">
@@ -28,7 +29,7 @@
                 <output class="message" :class="{ 'invalid': errors, 'correct': won }">
                     <span x-text="message"></span>
                     <template x-if="state === 'complete' && !errors">
-                        <button class="share" type="button" @click="share()" x-text="copied ? 'Copied' : 'Share'"></button>
+                        <button class="share" type="button" @click="share()" x-text="shareLabel"></button>
                     </template>
                     @guest
                         <template x-if="state === 'complete' && !errors">

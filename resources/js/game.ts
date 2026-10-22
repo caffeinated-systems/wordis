@@ -38,7 +38,7 @@ export default function game(saved: SavedGame = { guesses: [] }) {
     return {
         day: saved.day ?? '',
         seconds: saved.seconds as number | undefined,
-        copied: false,
+        shareLabel: 'Share',
         guessesAllowed: 5,
         wordLength: 5,
         answer: '',
@@ -219,14 +219,24 @@ export default function game(saved: SavedGame = { guesses: [] }) {
             }
         },
         async share(): Promise<void> {
-            if (navigator.share) {
-                // Closing the share sheet without sharing rejects, and there's nothing to do about it.
-                await navigator.share({ text: this.shareText }).catch(() => {});
+            try {
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ text: this.shareText });
 
-                return;
+                        return;
+                    } catch (error) {
+                        // The player closed the share sheet; anything else falls back to copying.
+                        if ((error as DOMException).name === 'AbortError') {
+                            return;
+                        }
+                    }
+                }
+                await navigator.clipboard.writeText(this.shareText);
+                this.shareLabel = 'Copied';
+            } catch {
+                this.shareLabel = "Couldn't copy";
             }
-            await navigator.clipboard.writeText(this.shareText);
-            this.copied = true;
         },
         applyResult({ statuses, answer, seconds }: GuessResult, celebrate = true): void {
             this.seconds ??= seconds;
