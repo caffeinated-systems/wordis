@@ -36,12 +36,9 @@ pest()->extend(TestCase::class)
 
 /**
  * Type the given word on the physical keyboard and press Enter.
- *
- * Pins Math.random first, so the Game picks the first line of each message list.
  */
 function guess(PendingAwaitablePage $page, string $word): void
 {
-    $page->script('Math.random = () => 0');
     $page->keys('#game', [...str_split($word), 'Enter']);
     settle($page);
 }

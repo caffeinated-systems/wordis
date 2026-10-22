@@ -22,6 +22,13 @@ function pick(lines: string[]): string {
     return lines[Math.floor(Math.random() * lines.length)];
 }
 
+// A line chosen by the Game's guesses, so a reload or another device shows the line the player saw.
+function pickFor(guesses: string, lines: string[]): string {
+    const hash = [...guesses].reduce((total, letter) => (total * 31 + letter.charCodeAt(0)) >>> 0, 0);
+
+    return lines[hash % lines.length];
+}
+
 const squares: Record<TileStatus, string> = { correct: '🟩', present: '🟨', absent: '⬛', '': '' };
 
 // m:ss, or h:mm:ss once a Game runs past an hour.
@@ -294,12 +301,13 @@ export default function game(saved: SavedGame = { guesses: [] }) {
         },
         applyResult({ statuses, answer, seconds }: GuessResult, celebrate = true): void {
             this.seconds ??= seconds;
+            const guesses = this.board.slice(0, this.currentRowIndex + 1).flat().map((tile) => tile.letter).join('');
             this.currentRow.forEach((tile, index) => tile.status = statuses[index]);
 
             if (statuses.every((status) => status === 'correct')) {
                 this.state = 'complete';
                 this.won = true;
-                this.message = this.verdict = pick(this.wins[this.currentRowIndex]);
+                this.message = this.verdict = pickFor(guesses, this.wins[this.currentRowIndex]);
                 if (celebrate) {
                     confetti();
                 }
@@ -307,7 +315,7 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 // The server reveals the answer only when the Game is lost.
                 this.state = 'complete';
                 this.answer = answer;
-                this.verdict = pick(this.losses);
+                this.verdict = pickFor(guesses, this.losses);
                 this.message = `${this.verdict} It was ${this.answer.toUpperCase()}`;
             } else {
                 this.currentRowIndex++;
