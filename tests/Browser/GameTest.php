@@ -135,7 +135,8 @@ test('guessing the word with the physical keyboard wins', function () {
 
     $page->assertSeeIn('.message', 'Lucky')
         ->assertNoJavaScriptErrors();
-    expect(tileStatuses($page, 0))->each->toBe('correct');
+    expect(tileStatuses($page, 0))->each->toBe('correct')
+        ->and($page->script('document.activeElement === document.body'))->toBeTrue();
 });
 
 test('a wrong guess gets a diss that matches how close it was', function (string $word, string $heat) {
@@ -155,7 +156,7 @@ test('a guest who finishes a Game is offered an account to save it', function ()
 
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Create an account to save this result')
+    $page->assertSeeIn('#finished', 'Create an account to save this result')
         ->assertAttributeContains('.save-result', 'href', '/login?signup=1');
 });
 
@@ -167,6 +168,67 @@ test('a signed-in player who finishes a Game is not offered an account', functio
 
     $page->assertSeeIn('.message', 'Lucky')
         ->assertDontSee('Create an account to save this result');
+});
+
+test('a finished Game is copied to share where there is no share sheet', function () {
+    $page = visit('/');
+    $page->script("Object.defineProperty(navigator, 'share', { value: undefined }); Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (text) => { window.shared = text; } } })");
+
+    guess($page, 'crane');
+    guess($page, 'tiger');
+    $page->click('.share');
+
+    $page->assertSeeIn('.share', 'Copied');
+    expect($page->script('window.shared'))->toMatch('/^Wordis '.today()->format('j M')." · 2\\/5 · ⏱ 0:0\\d\n\"Show-off\"\n⬛🟨⬛⬛🟨\n🟩🟩🟩🟩🟩\nhttp:\\/\\/[^\n]+\\z/u");
+});
+
+test('sharing again soon after still shows its result', function () {
+    $page = visit('/');
+    $page->script("Object.defineProperty(navigator, 'share', { value: undefined }); Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => {} } }); null");
+
+    guess($page, 'tiger');
+    $page->click('.share');
+    $page->wait(1.5);
+    $page->click('.share');
+    $page->wait(1);
+
+    $page->assertSeeIn('.share', 'Copied');
+});
+
+test('a share that fails says so rather than doing nothing', function () {
+    $page = visit('/');
+    $page->script("navigator.share = async () => { throw new DOMException('Blocked', 'NotAllowedError'); }; Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => { throw new DOMException('Denied', 'NotAllowedError'); } } }); null");
+
+    guess($page, 'tiger');
+    $page->click('.share');
+
+    $page->assertSeeIn('.share', "Couldn't share");
+});
+
+test('a lost Game is shared through the share sheet without its answer', function () {
+    $page = visit('/');
+    $page->script('navigator.share = async ({ text }) => { window.shared = text; }; null');
+
+    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $word) {
+        guess($page, $word);
+    }
+    $page->script("Alpine.\$data(document.querySelector('main')).seconds = 3725");
+    $page->click('.share');
+
+    expect($page->script('window.shared'))
+        ->toContain(' · X/5 · ⏱ 1:02:05')
+        ->toContain('"Ha ha, sucka!"')
+        ->not->toContain('TIGER');
+});
+
+test('a finished Game swaps the keyboard for sharing, and the message bubble keeps only the message', function () {
+    $page = visit('/');
+
+    guess($page, 'tiger');
+
+    $page->assertVisible('#finished .share')
+        ->assertMissing('.message .share');
+    expect($page->script("getComputedStyle(document.querySelector('#keyboard')).visibility"))->toBe('hidden');
 });
 
 test('a later win gets its own message', function () {
@@ -188,7 +250,8 @@ test('guessing the word with the on-screen keyboard wins', function () {
     settle($page);
 
     $page->assertSeeIn('.message', 'Lucky');
-    expect(tileStatuses($page, 0))->each->toBe('correct');
+    expect(tileStatuses($page, 0))->each->toBe('correct')
+        ->and($page->script('document.activeElement === document.body'))->toBeTrue();
 });
 
 test('five wrong guesses lose the game', function () {
@@ -343,6 +406,16 @@ test('pressing Enter on a focused on-screen key only presses that key', function
     $page->assertSeeNothingIn('.message span')
         ->assertPresent('#game > .row:nth-of-type(1).current')
         ->assertNoJavaScriptErrors();
+});
+
+test('finishing from a focused on-screen key moves focus to Share', function () {
+    $page = visit('/');
+
+    $page->keys('#game', ['t', 'i', 'g', 'e', 'r']);
+    $page->keys('#keyboard [data-key="Enter"]', ['Enter']);
+    settle($page);
+
+    expect($page->script("document.activeElement.classList.contains('share')"))->toBeTrue();
 });
 
 test('pressing Enter after sliding off an on-screen key submits the guess', function () {

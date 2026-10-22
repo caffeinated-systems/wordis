@@ -15,8 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property string $date
  * @property list<string> $guesses
+ * @property int|null $started_at Unix timestamp of the first guess
+ * @property int|null $finished_at Unix timestamp of the winning or last guess
  */
-#[Fillable(['date', 'guesses'])]
+#[Fillable(['date', 'guesses', 'started_at', 'finished_at'])]
 class Game extends Model
 {
     /** @use HasFactory<GameFactory> */
@@ -39,6 +41,8 @@ class Game extends Model
     {
         return [
             'guesses' => 'array',
+            'started_at' => 'integer',
+            'finished_at' => 'integer',
         ];
     }
 }

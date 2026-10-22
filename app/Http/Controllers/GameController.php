@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Answer;
+use App\Models\Game as GameModel;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -18,7 +19,7 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
- * @phpstan-type Game array{date: string, guesses: list<string>}
+ * @phpstan-type Game array{date: string, guesses: list<string>, started_at?: int|null, finished_at?: int|null}
  */
 class GameController extends Controller
 {
@@ -41,8 +42,10 @@ class GameController extends Controller
         $answer = Answer::for($game['date']);
 
         return view('welcome', ['game' => [
+            'day' => CarbonImmutable::parse($game['date'])->format('j M'),
             'guesses' => array_map(fn (string $guess): array => ['word' => $guess, 'statuses' => self::score($guess, $answer)], $game['guesses']),
             ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
+            ...self::seconds($game),
         ]]);
     }
 
@@ -76,11 +79,22 @@ class GameController extends Controller
 
             $guess = $request->string('guess')->lower()->value();
             $game['guesses'][] = $guess;
+            $now = now()->getTimestamp();
+
+            if (count($game['guesses']) === 1) {
+                $game['started_at'] = $now;
+            }
+
+            if (self::isFinished($game['guesses'], $answer)) {
+                $game['finished_at'] = $now;
+            }
+
             self::save($request, $game);
 
             return response()->json([
                 'statuses' => self::score($guess, $answer),
                 ...(self::isLost($game['guesses'], $answer) ? ['answer' => $answer] : []),
+                ...self::seconds($game),
             ]);
         });
     }
@@ -169,12 +183,12 @@ class GameController extends Controller
 
             if ($accountGame === null) {
                 // If another device created the row first, this reads it under the lock instead.
-                $user->games()->createOrFirst(['date' => $guestGame['date']], ['guesses' => $guestGame['guesses']]);
+                $user->games()->createOrFirst(['date' => $guestGame['date']], self::timedGuesses($guestGame));
                 $accountGame = $user->games()->where('date', $guestGame['date'])->lockForUpdate()->sole();
             }
 
             if ($accountGame->guesses === [] || (self::isFinished($guestGame['guesses'], $answer) && ! self::isFinished($accountGame->guesses, $answer))) {
-                $accountGame->update(['guesses' => $guestGame['guesses']]);
+                $accountGame->update(self::timedGuesses($guestGame));
             }
         }, 3);
     }
@@ -193,7 +207,7 @@ class GameController extends Controller
 
         $game = $request->user()->games()->latest('date')->lockForUpdate()->first();
 
-        return $game?->only(['date', 'guesses']);
+        return $game === null ? null : self::fromModel($game);
     }
 
     /**
@@ -209,7 +223,7 @@ class GameController extends Controller
             return $game;
         }
 
-        return $request->user()->games()->firstOrCreate(['date' => today()->toDateString()], ['guesses' => []])->only(['date', 'guesses']);
+        return self::fromModel($request->user()->games()->firstOrCreate(['date' => today()->toDateString()], ['guesses' => []]));
     }
 
     /**
@@ -223,7 +237,42 @@ class GameController extends Controller
             return;
         }
 
-        $request->user()->games()->updateOrCreate(['date' => $game['date']], ['guesses' => $game['guesses']]);
+        $request->user()->games()->updateOrCreate(['date' => $game['date']], self::timedGuesses($game));
+    }
+
+    /**
+     * @return Game
+     */
+    private static function fromModel(GameModel $game): array
+    {
+        return [
+            'date' => $game->date,
+            'guesses' => $game->guesses,
+            'started_at' => $game->started_at,
+            'finished_at' => $game->finished_at,
+        ];
+    }
+
+    /**
+     * The attributes a Game's row keeps from it.
+     *
+     * @param  Game  $game
+     * @return array{guesses: list<string>, started_at: int|null, finished_at: int|null}
+     */
+    private static function timedGuesses(array $game): array
+    {
+        return ['guesses' => $game['guesses'], 'started_at' => $game['started_at'] ?? null, 'finished_at' => $game['finished_at'] ?? null];
+    }
+
+    /**
+     * How long a finished Game took, from its first guess to its last. Games finished before they were timed have no time.
+     *
+     * @param  Game  $game
+     * @return array{seconds?: int}
+     */
+    private static function seconds(array $game): array
+    {
+        return isset($game['started_at'], $game['finished_at']) ? ['seconds' => $game['finished_at'] - $game['started_at']] : [];
     }
 
     /**

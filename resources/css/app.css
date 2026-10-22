@@ -100,10 +100,28 @@ h1 {
     color: #496e9e;
 }
 
-#keyboard {
+#dock {
+    display: grid;
     margin: min(4rem, 5vh) 0 0.5rem;
     margin: min(4rem, 5dvh) 0 0.5rem;
     flex: none;
+}
+
+/* The keyboard and what replaces it share one cell, so the dock keeps the keyboard's height */
+#dock > * {
+    grid-area: 1 / 1;
+}
+
+#keyboard.hidden {
+    visibility: hidden;
+}
+
+#finished {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
 }
 
 .key {
@@ -189,15 +207,24 @@ output.correct {
     text-shadow: 0 0 12px rgba(38, 246, 110, 0.42);
 }
 
-/* The bubble lets clicks through to the board, except on its link */
 .save-result {
-    display: block;
-    margin-top: 6px;
-    pointer-events: auto;
     font-size: 14px;
     color: white;
-    text-shadow: none;
     text-underline-offset: 2px;
+}
+
+.share {
+    min-width: 180px;
+    padding: 12px 32px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--correct-color);
+    box-shadow: 0 0 18px rgba(38, 246, 110, 0.35);
+    font: inherit;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a2942;
+    cursor: pointer;
 }
 
 /* Hidden rather than display: none, so screen readers keep the live region and announce new messages */
@@ -238,7 +265,7 @@ output:has(> span:empty) {
         filter: drop-shadow(0 -2px 0 var(--bubble-edge));
     }
 
-    #keyboard {
+    #dock {
         margin: 4.75rem 0 0.5rem;
     }
 }

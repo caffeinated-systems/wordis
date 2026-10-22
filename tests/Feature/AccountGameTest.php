@@ -11,6 +11,7 @@ use WorkOS\Client;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\postJson;
+use function Pest\Laravel\travel;
 use function Pest\Laravel\travelTo;
 use function Pest\Laravel\withSession;
 
@@ -73,6 +74,16 @@ test('an existing account keeps its Game unless it has none or the guest finishe
     'a finished account Game over an unfinished guest one' => [['tiger'], ['crane'], ['tiger']],
 ]);
 
+test('a guest Game keeps its time when it moves onto the account', function () {
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1]);
+    travel(90)->seconds();
+    postJson('/guesses', ['guess' => 'tiger', 'row' => 2]);
+
+    signIn('user_new');
+
+    get('/')->assertViewHas('game', fn (array $game): bool => $game['seconds'] === 90);
+});
+
 test('a guest Game with no guesses carries nothing over', function () {
     get('/');
 
@@ -102,6 +113,24 @@ test('a signed-in player\'s guesses are kept on their account', function () {
     play(['crane']);
 
     expect($user->games()->sole())->date->toBe(today()->toDateString())->guesses->toBe(['crane']);
+});
+
+test('a signed-in player\'s Game is timed from its first guess to its last', function () {
+    actingAs(User::factory()->create());
+
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1]);
+    travel(75)->seconds();
+    postJson('/guesses', ['guess' => 'tiger', 'row' => 2])->assertJsonPath('seconds', 75);
+
+    get('/')->assertViewHas('game', fn (array $game): bool => $game['seconds'] === 75);
+});
+
+test('a Game finished before Games were timed has no time', function () {
+    $user = User::factory()->create();
+    Game::factory()->for($user)->create(['guesses' => ['crane', 'tiger']]);
+    actingAs($user);
+
+    get('/')->assertViewHas('game', fn (array $game): bool => ! array_key_exists('seconds', $game));
 });
 
 test('a signed-in player can\'t replay a finished day from a fresh session', function () {

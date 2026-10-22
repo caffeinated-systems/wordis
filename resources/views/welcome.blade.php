@@ -6,6 +6,13 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>Wordis</title>
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Wordis">
+        <meta property="og:description" content="Find the day's five-letter word in five guesses.">
+        <meta property="og:url" content="{{ url('/') }}">
+        <meta property="og:image" content="{{ asset('assets/og.png') }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
         <link rel="icon" href="/favicon.ico" sizes="32x32">
         <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
@@ -19,13 +26,8 @@
                 </h1>
             </header>
             <div id="game">
-                <output class="message" :class="{ 'invalid': errors, 'correct': won }">
+                <output id="message" class="message" :class="{ 'invalid': errors, 'correct': won }">
                     <span x-text="message"></span>
-                    @guest
-                        <template x-if="state === 'complete' && !errors">
-                            <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
-                        </template>
-                    @endguest
                 </output>
                 <template x-for="(row, index) in board">
                     <div class="row" :class="{ 'current': currentRowIndex === index, 'invalid': currentRowIndex === index && errors}">
@@ -35,19 +37,32 @@
                     </div>
                 </template>
             </div>
-            <div id="keyboard"  @click.stop="onScreenKey($event)" @mousedown="keepFocusOffKeys($event)">
-                <template x-for="row in letters">
-                    <div class="row">
-                        <template x-for="key in row">
-                            <button
-                                class="key"
-                                :class="matchingTileForKey(key)?.status"
-                                type="button"
-                                :data-key="key"
-                                :aria-label="key"
-                                x-text="key === 'Backspace' ? '⌫' : key">
-                            </button>
-                        </template>
+            <div id="dock">
+                <div id="keyboard" :class="{ 'hidden': finished }" @click.stop="onScreenKey($event)" @mousedown="keepFocusOffKeys($event)">
+                    <template x-for="row in letters">
+                        <div class="row">
+                            <template x-for="key in row">
+                                <button
+                                    class="key"
+                                    :class="matchingTileForKey(key)?.status"
+                                    type="button"
+                                    :data-key="key"
+                                    :aria-label="key"
+                                    x-text="key === 'Backspace' ? '⌫' : key">
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                {{-- A finished Game needs no keyboard, so what to do next takes its place without moving the board.
+                     A player who finished from a focused key carries on from Share, which reads out the message it took focus from,
+                     and hears what sharing did. --}}
+                <template x-if="finished">
+                    <div id="finished" aria-live="polite" x-init="$root.querySelector('#keyboard').contains(document.activeElement) && $el.querySelector('.share').focus()">
+                        <button class="share" type="button" aria-describedby="message" @click="share()" x-text="shareLabel"></button>
+                        @guest
+                            <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
+                        @endguest
                     </div>
                 </template>
             </div>

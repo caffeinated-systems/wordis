@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 
 use function Pest\Laravel\get;
 use function Pest\Laravel\postJson;
+use function Pest\Laravel\travel;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
@@ -17,7 +18,7 @@ beforeEach(function () {
 test('a guess is scored letter by letter against today\'s answer', function (string $guess, array $statuses) {
     postJson('/guesses', ['guess' => $guess, 'row' => 1])
         ->assertOk()
-        ->assertExactJson(['statuses' => $statuses]);
+        ->assertJsonPath('statuses', $statuses);
 })->with([
     'a wrong guess' => ['tribe', ['correct', 'present', 'present', 'absent', 'present']],
     'a letter already correct elsewhere' => ['tight', ['correct', 'correct', 'correct', 'absent', 'absent']],
@@ -90,6 +91,7 @@ test('loading the page shows the Game so far', function () {
     postJson('/guesses', ['guess' => 'tribe', 'row' => 1]);
 
     get('/')->assertViewHas('game', [
+        'day' => today()->format('j M'),
         'guesses' => [['word' => 'tribe', 'statuses' => ['correct', 'present', 'present', 'absent', 'present']]],
     ]);
 });
@@ -102,6 +104,20 @@ test('loading the page after a lost Game shows the answer', function () {
     get('/')->assertViewHas('game', fn (array $game): bool => $game['answer'] === 'tiger');
 });
 
+test('a finished Game is timed from its first guess to its last', function () {
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1])->assertJsonMissingPath('seconds');
+    travel(134)->seconds();
+
+    postJson('/guesses', ['guess' => 'tiger', 'row' => 2])->assertJsonPath('seconds', 134);
+    get('/')->assertViewHas('game', fn (array $game): bool => $game['seconds'] === 134 && $game['day'] === today()->format('j M'));
+});
+
+test('a Game in progress has no time yet', function () {
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1]);
+
+    get('/')->assertViewHas('game', fn (array $game): bool => ! array_key_exists('seconds', $game));
+});
+
 test('a guess after midnight is scored against the answer the Game started on', function () {
     travelTo(today()->setTime(23, 59));
     Answer::factory()->create(['date' => today()->addDay()->toDateString(), 'word' => 'crane']);
@@ -109,7 +125,7 @@ test('a guess after midnight is scored against the answer the Game started on', 
 
     travelTo(today()->addDay()->setTime(0, 1));
 
-    postJson('/guesses', ['guess' => 'tiger', 'row' => 1])->assertExactJson(['statuses' => array_fill(0, 5, 'correct')]);
+    postJson('/guesses', ['guess' => 'tiger', 'row' => 1])->assertJsonPath('statuses', array_fill(0, 5, 'correct'));
 });
 
 test('the first page load after midnight starts the new day\'s Game', function () {
@@ -119,8 +135,8 @@ test('the first page load after midnight starts the new day\'s Game', function (
 
     travelTo(today()->addDay()->setTime(0, 1));
 
-    get('/')->assertViewHas('game', ['guesses' => []]);
-    postJson('/guesses', ['guess' => 'crane', 'row' => 1])->assertExactJson(['statuses' => array_fill(0, 5, 'correct')]);
+    get('/')->assertViewHas('game', fn (array $game): bool => $game['guesses'] === []);
+    postJson('/guesses', ['guess' => 'crane', 'row' => 1])->assertJsonPath('statuses', array_fill(0, 5, 'correct'));
 });
 
 test('a guess needs the CSRF token from the page', function () {

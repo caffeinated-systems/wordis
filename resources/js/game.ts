@@ -14,16 +14,32 @@ export function heat(statuses: TileStatus[]): Heat {
 type GuessResult = {
     statuses: TileStatus[];
     answer?: string;
+    seconds?: number;
 };
+
+const squares: Record<TileStatus, string> = { correct: '🟩', present: '🟨', absent: '⬛', '': '' };
+
+// m:ss, or h:mm:ss once a Game runs past an hour.
+export function duration(seconds: number): string {
+    const parts = [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60];
+
+    return (parts[0] ? parts : parts.slice(1)).map((part, index) => index ? String(part).padStart(2, '0') : String(part)).join(':');
+}
 
 // The Game the server has recorded so far, so a reload resumes it.
 export type SavedGame = {
+    day?: string;
     guesses: { word: string; statuses: TileStatus[] }[];
     answer?: string;
+    seconds?: number;
 };
 
 export default function game(saved: SavedGame = { guesses: [] }) {
     return {
+        day: saved.day ?? '',
+        seconds: saved.seconds as number | undefined,
+        shareLabel: 'Share',
+        shareReset: 0,
         guessesAllowed: 5,
         wordLength: 5,
         answer: '',
@@ -78,8 +94,22 @@ export default function game(saved: SavedGame = { guesses: [] }) {
         get currentGuess(): string {
             return this.currentRow.map((tile) => tile.letter).join("");
         },
+        get finished(): boolean {
+            return this.state === 'complete' && !this.errors;
+        },
         get remainingGuesses(): number {
             return this.guessesAllowed - this.currentRowIndex -1;
+        },
+        // The result to share: never the answer, so it doesn't spoil the day for anyone it's sent to.
+        get shareText(): string {
+            const rows = this.board.slice(0, this.currentRowIndex + 1);
+
+            return [
+                ['Wordis ' + this.day, `${this.won ? rows.length : 'X'}/${this.guessesAllowed}`, ...(this.seconds === undefined ? [] : [`⏱ ${duration(this.seconds)}`])].join(' · '),
+                `"${this.won ? this.wins[this.currentRowIndex] : 'Ha ha, sucka!'}"`,
+                ...rows.map((row) => row.map((tile) => squares[tile.status]).join('')),
+                location.origin,
+            ].join('\n');
         },
         init(): void {
             this.board = Array.from({ length: this.guessesAllowed }, () => {
@@ -192,7 +222,32 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 this.checking = false;
             }
         },
-        applyResult({ statuses, answer }: GuessResult, celebrate = true): void {
+        async share(): Promise<void> {
+            clearTimeout(this.shareReset);
+            this.shareLabel = 'Share';
+            try {
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ text: this.shareText });
+
+                        return;
+                    } catch (error) {
+                        // The player closed the share sheet; anything else falls back to copying.
+                        if ((error as DOMException).name === 'AbortError') {
+                            return;
+                        }
+                    }
+                }
+                await navigator.clipboard.writeText(this.shareText);
+                this.shareLabel = 'Copied';
+            } catch {
+                this.shareLabel = "Couldn't share";
+            }
+            // Back to Share, so sharing again shows and announces its result afresh.
+            this.shareReset = setTimeout(() => this.shareLabel = 'Share', 2000);
+        },
+        applyResult({ statuses, answer, seconds }: GuessResult, celebrate = true): void {
+            this.seconds ??= seconds;
             this.currentRow.forEach((tile, index) => tile.status = statuses[index]);
 
             if (statuses.every((status) => status === 'correct')) {
