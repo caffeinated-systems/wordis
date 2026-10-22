@@ -221,6 +221,22 @@ test('a lost Game is shared through the share sheet without its answer', functio
         ->not->toContain('TIGER');
 });
 
+test('a shared Game quotes the line the player was shown', function () {
+    $page = visit('/');
+    $page->script('navigator.share = async ({ text }) => { window.shared = text; }; null');
+
+    foreach (['crane', 'house', 'apple', 'route'] as $word) {
+        guess($page, $word);
+    }
+    $page->script('Math.random = () => 0.99');
+    $page->keys('#game', [...str_split('teeth'), 'Enter']);
+    settle($page);
+    $page->click('.share');
+
+    $page->assertSeeIn('.message', 'Wow. Just wow. It was TIGER');
+    expect($page->script('window.shared'))->toContain('"Wow. Just wow."');
+});
+
 test('a finished Game swaps the keyboard for sharing, and the message bubble keeps only the message', function () {
     $page = visit('/');
 
@@ -274,6 +290,7 @@ test('a later win gets its own message', function () {
 
 test('guessing the word with the on-screen keyboard wins', function () {
     $page = visit('/');
+    $page->script('Math.random = () => 0');
 
     foreach (['T', 'I', 'G', 'E', 'R', 'Enter'] as $key) {
         $page->click("#keyboard [data-key=\"{$key}\"]");
@@ -332,7 +349,7 @@ test('reloading a finished Game shows it finished', function () {
     $page->refresh();
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Ha ha, sucka! It was TIGER')
+    $page->assertSeeIn('.message', 'It was TIGER')
         ->assertNoJavaScriptErrors();
     expect(rowLetters($page, 4))->toBe('teeth');
 });
