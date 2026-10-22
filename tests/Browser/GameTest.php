@@ -209,15 +209,16 @@ test('a lost Game is shared through the share sheet without its answer', functio
     $page = visit('/');
     $page->script('navigator.share = async ({ text }) => { window.shared = text; }; null');
 
-    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $word) {
+    foreach (['crane', 'house', 'apple', 'route', 'ghost'] as $word) {
         guess($page, $word);
     }
     $page->script("Alpine.\$data(document.querySelector('main')).seconds = 3725");
     $page->click('.share');
 
+    $page->assertSeeIn('.message', 'Wow. Just wow. It was TIGER');
     expect($page->script('window.shared'))
         ->toContain(' · X/5 · ⏱ 1:02:05')
-        ->toContain('"Ha ha, sucka!"')
+        ->toContain('"Wow. Just wow."')
         ->not->toContain('TIGER');
 });
 
