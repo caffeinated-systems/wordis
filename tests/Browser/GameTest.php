@@ -182,6 +182,19 @@ test('a finished Game is copied to share where there is no share sheet', functio
     expect($page->script('window.shared'))->toMatch('/^Wordis '.today()->format('j M')." · 2\\/5 · ⏱ 0:0\\d\n\"Show-off\"\n⬛🟨⬛⬛🟨\n🟩🟩🟩🟩🟩\nhttp:\\/\\/[^\n]+\\z/u");
 });
 
+test('sharing again soon after still shows its result', function () {
+    $page = visit('/');
+    $page->script("Object.defineProperty(navigator, 'share', { value: undefined }); Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => {} } }); null");
+
+    guess($page, 'tiger');
+    $page->click('.share');
+    $page->wait(1.5);
+    $page->click('.share');
+    $page->wait(1);
+
+    $page->assertSeeIn('.share', 'Copied');
+});
+
 test('a share that fails says so rather than doing nothing', function () {
     $page = visit('/');
     $page->script("navigator.share = async () => { throw new DOMException('Blocked', 'NotAllowedError'); }; Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => { throw new DOMException('Denied', 'NotAllowedError'); } } }); null");

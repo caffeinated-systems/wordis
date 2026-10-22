@@ -39,6 +39,7 @@ export default function game(saved: SavedGame = { guesses: [] }) {
         day: saved.day ?? '',
         seconds: saved.seconds as number | undefined,
         shareLabel: 'Share',
+        shareReset: 0,
         guessesAllowed: 5,
         wordLength: 5,
         answer: '',
@@ -222,6 +223,8 @@ export default function game(saved: SavedGame = { guesses: [] }) {
             }
         },
         async share(): Promise<void> {
+            clearTimeout(this.shareReset);
+            this.shareLabel = 'Share';
             try {
                 if (navigator.share) {
                     try {
@@ -241,7 +244,7 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 this.shareLabel = "Couldn't share";
             }
             // Back to Share, so sharing again shows and announces its result afresh.
-            setTimeout(() => this.shareLabel = 'Share', 2000);
+            this.shareReset = setTimeout(() => this.shareLabel = 'Share', 2000);
         },
         applyResult({ statuses, answer, seconds }: GuessResult, celebrate = true): void {
             this.seconds ??= seconds;
