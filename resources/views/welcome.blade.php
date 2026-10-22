@@ -26,7 +26,7 @@
                 </h1>
             </header>
             <div id="game">
-                <output class="message" :class="{ 'invalid': errors, 'correct': won }">
+                <output id="message" class="message" :class="{ 'invalid': errors, 'correct': won }">
                     <span x-text="message"></span>
                 </output>
                 <template x-for="(row, index) in board">
@@ -55,10 +55,11 @@
                     </template>
                 </div>
                 {{-- A finished Game needs no keyboard, so what to do next takes its place without moving the board.
-                     A player who finished from a focused key carries on from Share, and hears what sharing did. --}}
+                     A player who finished from a focused key carries on from Share, which reads out the message it took focus from,
+                     and hears what sharing did. --}}
                 <template x-if="finished">
                     <div id="finished" aria-live="polite" x-init="$root.querySelector('#keyboard').contains(document.activeElement) && $el.querySelector('.share').focus()">
-                        <button class="share" type="button" @click="share()" x-text="shareLabel"></button>
+                        <button class="share" type="button" aria-describedby="message" @click="share()" x-text="shareLabel"></button>
                         @guest
                             <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
                         @endguest

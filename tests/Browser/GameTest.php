@@ -135,7 +135,8 @@ test('guessing the word with the physical keyboard wins', function () {
 
     $page->assertSeeIn('.message', 'Lucky')
         ->assertNoJavaScriptErrors();
-    expect(tileStatuses($page, 0))->each->toBe('correct');
+    expect(tileStatuses($page, 0))->each->toBe('correct')
+        ->and($page->script('document.activeElement === document.body'))->toBeTrue();
 });
 
 test('a wrong guess gets a diss that matches how close it was', function (string $word, string $heat) {
@@ -236,7 +237,8 @@ test('guessing the word with the on-screen keyboard wins', function () {
     settle($page);
 
     $page->assertSeeIn('.message', 'Lucky');
-    expect(tileStatuses($page, 0))->each->toBe('correct');
+    expect(tileStatuses($page, 0))->each->toBe('correct')
+        ->and($page->script('document.activeElement === document.body'))->toBeTrue();
 });
 
 test('five wrong guesses lose the game', function () {

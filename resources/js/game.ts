@@ -240,6 +240,8 @@ export default function game(saved: SavedGame = { guesses: [] }) {
             } catch {
                 this.shareLabel = "Couldn't share";
             }
+            // Back to Share, so sharing again shows and announces its result afresh.
+            setTimeout(() => this.shareLabel = 'Share', 2000);
         },
         applyResult({ statuses, answer, seconds }: GuessResult, celebrate = true): void {
             this.seconds ??= seconds;
