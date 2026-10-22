@@ -15,6 +15,8 @@
         <meta property="og:image:height" content="630">
         <link rel="icon" href="/favicon.ico" sizes="32x32">
         <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+        {{-- The countdown's font is fetched up front, so a finished Game's readout isn't blank while it loads. --}}
+        <link rel="preload" href="{{ Vite::asset('resources/fonts/DSEG7Classic-Italic.woff2') }}" as="font" type="font/woff2" crossorigin>
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
     </head>
     <body>
@@ -65,7 +67,7 @@
                         @endguest
                         {{-- A timer is not announced as it ticks, so the panel's live region stays quiet until the new Game is ready. --}}
                         <template x-if="nextGameIn">
-                            <div class="countdown" role="timer">
+                            <div class="countdown" role="timer" aria-live="off">
                                 <span class="countdown-label">Next game available in</span>
                                 <span class="readout">
                                     <span class="unlit" aria-hidden="true" x-text="countdown.replace(/\d/g, '8')"></span>
