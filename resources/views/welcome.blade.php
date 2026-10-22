@@ -27,6 +27,9 @@
                     <img id="wordis-logo" src='/assets/wordis-logo.svg' alt='Wordis' width="4460" height="995" />
                 </h1>
             </header>
+            @session('status')
+                <p class="notice" role="status">{{ $value }}</p>
+            @endsession
             <div id="game">
                 <output id="message" class="message" :class="{ 'invalid': errors, 'correct': won }">
                     <span x-text="message"></span>

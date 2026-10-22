@@ -18,6 +18,10 @@
                 </h1>
             </header>
 
+            @session('error')
+                <p class="notice" role="alert">{{ $value }}</p>
+            @endsession
+
             @if ($stats['played'] === 0)
                 <p class="empty">Your games will show up here once you've played. <a href="/">Play today's game</a></p>
             @else
@@ -107,6 +111,19 @@
                     @endforeach
                 </ol>
             </section>
+
+            <button type="button" class="delete-account" commandfor="delete-account" command="show-modal">Delete account</button>
+
+            <dialog id="delete-account" closedby="any" aria-labelledby="delete-account-title">
+                <h2 id="delete-account-title">Delete your account?</h2>
+                <p>Your sign-in{{ $stats['played'] > 0 ? ' and all '.$stats['played'].' of your '.Str::plural('game', $stats['played']) : '' }} will be deleted for good. This can't be undone.</p>
+                <form method="POST" action="{{ route('account.destroy') }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="button" class="close" commandfor="delete-account" command="close">Cancel</button>
+                    <button type="submit" class="delete">Delete account</button>
+                </form>
+            </dialog>
 
             @foreach ($cells as $cell)
                 @if ($cell['game']['answer'] ?? null)
