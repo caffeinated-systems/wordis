@@ -6,6 +6,12 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>Wordis</title>
+        <meta property="og:title" content="Wordis">
+        <meta property="og:description" content="Find the day's five-letter word in five guesses.">
+        <meta property="og:url" content="{{ url('/') }}">
+        <meta property="og:image" content="{{ asset('assets/og.png') }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
         <link rel="icon" href="/favicon.ico" sizes="32x32">
         <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
