@@ -393,6 +393,16 @@ test('pressing Enter on a focused on-screen key only presses that key', function
         ->assertNoJavaScriptErrors();
 });
 
+test('finishing from a focused on-screen key moves focus to Share', function () {
+    $page = visit('/');
+
+    $page->keys('#game', ['t', 'i', 'g', 'e', 'r']);
+    $page->keys('#keyboard [data-key="Enter"]', ['Enter']);
+    settle($page);
+
+    expect($page->script("document.activeElement.classList.contains('share')"))->toBeTrue();
+});
+
 test('pressing Enter after sliding off an on-screen key submits the guess', function () {
     $page = visit('/');
 

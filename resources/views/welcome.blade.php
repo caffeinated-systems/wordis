@@ -54,9 +54,10 @@
                         </div>
                     </template>
                 </div>
-                {{-- A finished Game needs no keyboard, so what to do next takes its place without moving the board --}}
+                {{-- A finished Game needs no keyboard, so what to do next takes its place without moving the board.
+                     A player who finished from a focused key carries on from Share, and hears what sharing did. --}}
                 <template x-if="finished">
-                    <div id="finished">
+                    <div id="finished" aria-live="polite" x-init="$root.querySelector('#keyboard').contains(document.activeElement) && $el.querySelector('.share').focus()">
                         <button class="share" type="button" @click="share()" x-text="shareLabel"></button>
                         @guest
                             <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
