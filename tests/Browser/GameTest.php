@@ -169,6 +169,34 @@ test('a signed-in player who finishes a Game is not offered an account', functio
         ->assertDontSee('Create an account to save this result');
 });
 
+test('a finished Game is copied to share where there is no share sheet', function () {
+    $page = visit('/');
+    $page->script("Object.defineProperty(navigator, 'share', { value: undefined }); Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (text) => { window.shared = text; } } })");
+
+    guess($page, 'crane');
+    guess($page, 'tiger');
+    $page->click('.share');
+
+    $page->assertSeeIn('.share', 'Copied');
+    expect($page->script('window.shared'))->toMatch('/^Wordis '.today()->format('j M')." · 2\\/5 · ⏱ 0:0\\d\n\"Show-off\"\n⬛🟨⬛⬛🟨\n🟩🟩🟩🟩🟩\nhttp:\\/\\/[^\n]+\\z/u");
+});
+
+test('a lost Game is shared through the share sheet without its answer', function () {
+    $page = visit('/');
+    $page->script("navigator.share = async ({ text }) => { window.shared = text; }; null");
+
+    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $word) {
+        guess($page, $word);
+    }
+    $page->script("Alpine.\$data(document.querySelector('main')).seconds = 3725");
+    $page->click('.share');
+
+    expect($page->script('window.shared'))
+        ->toContain(' · X/5 · ⏱ 1:02:05')
+        ->toContain('"Ha ha, sucka!"')
+        ->not->toContain('TIGER');
+});
+
 test('a later win gets its own message', function () {
     $page = visit('/');
 

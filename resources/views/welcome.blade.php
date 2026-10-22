@@ -21,6 +21,9 @@
             <div id="game">
                 <output class="message" :class="{ 'invalid': errors, 'correct': won }">
                     <span x-text="message"></span>
+                    <template x-if="state === 'complete' && !errors">
+                        <button class="share" type="button" @click="share()" x-text="copied ? 'Copied' : 'Share'"></button>
+                    </template>
                     @guest
                         <template x-if="state === 'complete' && !errors">
                             <a class="save-result" href="{{ route('login', ['signup' => 1]) }}">Create an account to save this result</a>
