@@ -231,6 +231,7 @@ test('a shared Game quotes the line the player was shown', function () {
     $page->script('Math.random = () => 0.99');
     $page->keys('#game', [...str_split('teeth'), 'Enter']);
     settle($page);
+    $page->script('Math.random = () => 0');
     $page->click('.share');
 
     $page->assertSeeIn('.message', 'Wow. Just wow. It was TIGER');
