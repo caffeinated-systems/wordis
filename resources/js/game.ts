@@ -32,12 +32,14 @@ export type SavedGame = {
     guesses: { word: string; statuses: TileStatus[] }[];
     answer?: string;
     seconds?: number;
+    nextGameIn?: number;
 };
 
 export default function game(saved: SavedGame = { guesses: [] }) {
     return {
         day: saved.day ?? '',
         seconds: saved.seconds as number | undefined,
+        nextGameIn: saved.nextGameIn ?? 0,
         shareLabel: 'Share',
         shareReset: 0,
         guessesAllowed: 5,
@@ -111,7 +113,20 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 location.origin,
             ].join('\n');
         },
+        get countdown(): string {
+            return duration(this.nextGameIn);
+        },
         init(): void {
+            // Counted down from when the page loaded, so the device's time of day and timezone don't matter,
+            // and a tab that slept catches up when it wakes. Changing the device's clock meanwhile still shifts it.
+            // Checked four times a second so no second is shown twice or skipped; unchanged values don't redraw.
+            const nextGameAt = Date.now() + this.nextGameIn * 1000;
+            const tick = setInterval(() => {
+                this.nextGameIn = Math.max(0, Math.ceil((nextGameAt - Date.now()) / 1000));
+                if (!this.nextGameIn) {
+                    clearInterval(tick);
+                }
+            }, 250);
             this.board = Array.from({ length: this.guessesAllowed }, () => {
                 return Array.from({ length: this.wordLength }, (item, index) => new Tile(index));
             });
