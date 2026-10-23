@@ -14,7 +14,7 @@
             <a href="/"><img id="wordis-logo" src='/assets/wordis-logo.svg' alt='Wordis' width="4460" height="995" /></a>
 
             <h1>Privacy</h1>
-            <p>Last updated 21 October 2026.</p>
+            <p>Last updated 22 October 2026.</p>
             <p>Wordis is a daily word game run by Daniel Floris. This page explains what Wordis keeps about you, and why.</p>
 
             <h2>Playing without signing in</h2>
@@ -40,7 +40,8 @@
             <p>Wordis only sets the cookies it needs to work: one for your session and one that protects forms from forgery. There are no tracking cookies.</p>
 
             <h2>Seeing or deleting your data</h2>
-            <p>Email <a href="mailto:daniel.j.floris@gmail.com">daniel.j.floris@gmail.com</a> to see, correct or delete what Wordis keeps about you. Deleting your account also deletes your WorkOS account.</p>
+            <p>You can delete your account yourself from the foot of your history page. That deletes your games, what Wordis keeps about you and your WorkOS account, all at once.</p>
+            <p>Email <a href="mailto:daniel.j.floris@gmail.com">daniel.j.floris@gmail.com</a> to see or correct what Wordis keeps about you.</p>
 
             <h2>Changes</h2>
             <p>Changes to this page will be posted here, with a new date at the top.</p>

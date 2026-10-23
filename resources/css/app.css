@@ -817,3 +817,63 @@ footer a:focus-visible {
     background: white;
     color: #0e1626;
 }
+
+/* A one-line message after a redirect, like a deleted account or a failed delete */
+.notice {
+    margin: 0 0 1rem;
+    text-align: center;
+    color: #8494ab;
+}
+
+.notice[role="alert"] {
+    color: var(--invalid-color);
+}
+
+/* Kept quiet at the foot of the history page, so it's findable but never in the way */
+.delete-account {
+    display: block;
+    margin: 3rem auto 0;
+    padding: .25rem .5rem;
+    border: 0;
+    background: none;
+    color: #8494ab;
+    font: inherit;
+    font-size: .8125rem;
+    cursor: pointer;
+}
+
+.delete-account:hover,
+.delete-account:focus-visible {
+    color: var(--invalid-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+#delete-account p {
+    color: #8494ab;
+}
+
+#delete-account form {
+    display: flex;
+    justify-content: center;
+    gap: .75rem;
+    margin-top: 1.25rem;
+}
+
+.delete {
+    padding: .5rem 1.25rem;
+    border: 1.5px solid var(--invalid-color);
+    border-radius: 999px;
+    background: var(--invalid-color);
+    color: white;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.delete:hover,
+.delete:focus-visible {
+    background: white;
+    border-color: white;
+    color: #0e1626;
+}

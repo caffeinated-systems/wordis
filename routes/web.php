@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 use App\Http\Controllers\GameController;
 use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 use Laravel\WorkOS\Http\Requests\AuthKitAuthenticationRequest;
 use Laravel\WorkOS\Http\Requests\AuthKitLoginRequest;
 use Laravel\WorkOS\Http\Requests\AuthKitLogoutRequest;
+use Laravel\WorkOS\WorkOS;
 use Symfony\Component\HttpFoundation\Response;
+use WorkOS\Exception\NotFoundException;
 use WorkOS\Exception\WorkOSException;
+use WorkOS\UserManagement;
 
 Route::get('/', [GameController::class, 'show'])->block();
 Route::get('/history', [GameController::class, 'history'])->middleware('auth')->name('history');
@@ -49,3 +57,38 @@ Route::get('/authenticate', function (AuthKitAuthenticationRequest $request): Re
 Route::post('/logout', fn (AuthKitLogoutRequest $request): Response => $request->logout())
     ->middleware(ValidateSessionWithWorkOS::class)
     ->name('logout');
+
+// WorkOS goes first, so if it fails the account stays whole and the player can try again. Their Games cascade with the User.
+Route::delete('/account', function (Request $request, #[CurrentUser] User $user): RedirectResponse {
+    if ($user->workos_id !== null) {
+        WorkOS::configure();
+
+        try {
+            (new UserManagement)->deleteUser($user->workos_id);
+        } catch (NotFoundException) {
+            // The WorkOS login is already gone.
+        } catch (WorkOSException $exception) {
+            report($exception);
+
+            return redirect()->route('history')->with('error', "Your account couldn't be deleted. Please try again.");
+        }
+    }
+
+    // If this fails the player stays signed in, and a retry finds the WorkOS login already gone.
+    DB::transaction(function () use ($user): void {
+        // Their other devices' sessions go too, rather than lingering until they expire.
+        if (config('session.driver') === 'database') {
+            DB::table(config()->string('session.table'))->where('user_id', $user->id)->delete();
+        }
+
+        $user->delete();
+    });
+
+    // Logging out saves a fresh remember token, which would re-insert the deleted User.
+    $user->setRememberToken(null);
+    Auth::guard('web')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/')->with('status', 'Your account was deleted.');
+})->middleware('auth')->name('account.destroy')->block();
