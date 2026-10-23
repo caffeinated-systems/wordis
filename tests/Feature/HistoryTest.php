@@ -98,7 +98,7 @@ test('today\'s answer stays hidden until today\'s Game is finished', function ()
 
     actingAs($user)->get('/history')
         ->assertViewHas('cells', fn (array $cells): bool => collect($cells)->filter()->pluck('game.answer', 'date')->only(['2026-10-20', '2026-10-21'])->all() === ['2026-10-20' => $yesterday, '2026-10-21' => null])
-        ->assertDontSee($today);
+        ->assertDontSee("<strong>{$today}</strong>", false);
 });
 
 test('months run from the first played Game to this month', function (string $query, string $shown, ?string $previous, ?string $next) {

@@ -133,7 +133,7 @@ test('guessing the word with the physical keyboard wins', function () {
 
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Lucky')
+    $page->assertSeeIn('.message', 'Even a stopped clock is right twice a day')
         ->assertNoJavaScriptErrors();
     expect(tileStatuses($page, 0))->each->toBe('correct')
         ->and($page->script('document.activeElement === document.body'))->toBeTrue();
@@ -166,7 +166,7 @@ test('a signed-in player who finishes a Game is not offered an account', functio
 
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Lucky')
+    $page->assertSeeIn('.message', 'Even a stopped clock is right twice a day')
         ->assertDontSee('Create an account to save this result');
 });
 
@@ -179,7 +179,7 @@ test('a finished Game is copied to share where there is no share sheet', functio
     $page->click('.share');
 
     $page->assertSeeIn('.share', 'Copied');
-    expect($page->script('window.shared'))->toMatch('/^Wordis '.today()->format('j M')." · 2\\/5 · ⏱ 0:0\\d\n\"Show-off\"\n⬛🟨⬛⬛🟨\n🟩🟩🟩🟩🟩\nhttp:\\/\\/[^\n]+\\z/u");
+    expect($page->script('window.shared'))->toMatch('/^Wordis '.today()->format('j M')." · 2\\/5 · ⏱ 0:0\\d\n\"Don't let it go to your head\"\n⬛🟨⬛⬛🟨\n🟩🟩🟩🟩🟩\nhttp:\\/\\/[^\n]+\\z/u");
 });
 
 test('sharing again soon after still shows its result', function () {
@@ -209,16 +209,32 @@ test('a lost Game is shared through the share sheet without its answer', functio
     $page = visit('/');
     $page->script('navigator.share = async ({ text }) => { window.shared = text; }; null');
 
-    foreach (['crane', 'house', 'apple', 'route', 'teeth'] as $word) {
+    foreach (['crane', 'house', 'apple', 'route', 'ghost'] as $word) {
         guess($page, $word);
     }
     $page->script("Alpine.\$data(document.querySelector('main')).seconds = 3725");
     $page->click('.share');
 
+    $page->assertSeeIn('.message', 'Wow. Just wow. It was TIGER');
     expect($page->script('window.shared'))
         ->toContain(' · X/5 · ⏱ 1:02:05')
-        ->toContain('"Ha ha, sucka!"')
+        ->toContain('"Wow. Just wow."')
         ->not->toContain('TIGER');
+});
+
+test('a reloaded Game keeps the line the player was shown, and shares it', function () {
+    $page = visit('/');
+    $page->script('Math.random = () => 0');
+
+    guess($page, 'crane');
+    guess($page, 'tiger');
+    $page->assertSeeIn('.message', "Don't let it go to your head");
+    $page->refresh();
+    $page->script('navigator.share = async ({ text }) => { window.shared = text; }; null');
+    $page->click('.share');
+
+    $page->assertSeeIn('.message', "Don't let it go to your head");
+    expect($page->script('window.shared'))->toContain("\"Don't let it go to your head\"");
 });
 
 test('a finished Game swaps the keyboard for sharing, and the message bubble keeps only the message', function () {
@@ -268,7 +284,7 @@ test('a later win gets its own message', function () {
     guess($page, 'crane');
     guess($page, 'tiger');
 
-    $page->assertSeeIn('.message', 'Show-off')
+    $page->assertSeeIn('.message', "Don't let it go to your head")
         ->assertNoJavaScriptErrors();
 });
 
@@ -280,7 +296,7 @@ test('guessing the word with the on-screen keyboard wins', function () {
     }
     settle($page);
 
-    $page->assertSeeIn('.message', 'Lucky');
+    $page->assertSeeIn('.message', 'Even a stopped clock is right twice a day');
     expect(tileStatuses($page, 0))->each->toBe('correct')
         ->and($page->script('document.activeElement === document.body'))->toBeTrue();
 });
@@ -355,7 +371,7 @@ test('a won game ignores further keys', function () {
     $page->keys('#game', ['Backspace']);
     guess($page, 'x');
 
-    $page->assertSeeIn('.message', 'Lucky');
+    $page->assertSeeIn('.message', 'Even a stopped clock is right twice a day');
     expect(rowLetters($page, 0))->toBe('tiger');
 });
 
@@ -423,7 +439,7 @@ test('pressing Enter after tapping an on-screen key submits the guess', function
     }
     guess($page, 'r');
 
-    $page->assertSeeIn('.message', 'Lucky')
+    $page->assertSeeIn('.message', 'Even a stopped clock is right twice a day')
         ->assertNoJavaScriptErrors();
 });
 
@@ -456,7 +472,7 @@ test('pressing Enter after sliding off an on-screen key submits the guess', func
     $page->drag('#keyboard [data-key="Backspace"]', '#game');
     guess($page, 'r');
 
-    $page->assertSeeIn('.message', 'Lucky')
+    $page->assertSeeIn('.message', 'Even a stopped clock is right twice a day')
         ->assertNoJavaScriptErrors();
 });
 

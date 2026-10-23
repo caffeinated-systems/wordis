@@ -17,6 +17,18 @@ type GuessResult = {
     seconds?: number;
 };
 
+// A line at random, so the Game doesn't say the same thing every time.
+function pick(lines: string[]): string {
+    return lines[Math.floor(Math.random() * lines.length)];
+}
+
+// A line chosen by the Game's guesses, so a reload or another device shows the line the player saw.
+function pickFor(guesses: string, lines: string[]): string {
+    const hash = [...guesses].reduce((total, letter) => (total * 31 + letter.charCodeAt(0)) >>> 0, 0);
+
+    return lines[hash % lines.length];
+}
+
 const squares: Record<TileStatus, string> = { correct: '🟩', present: '🟨', absent: '⬛', '': '' };
 
 // m:ss, or h:mm:ss once a Game runs past an hour.
@@ -52,6 +64,8 @@ export default function game(saved: SavedGame = { guesses: [] }) {
         pending: Promise.resolve(),
         errors: false,
         message: '',
+        // The win or loss line, quoted again in the shared result.
+        verdict: '',
         board: [] as Tile[][],
         letters: [
             "QWERTYUIOP".split(""),
@@ -66,6 +80,11 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 'Did you sneeze on the keyboard?',
                 'That was painful to watch',
                 'Bold choice. Wrong, but bold',
+                'My cat walks across the keyboard better than that',
+                'Were you even looking?',
+                'Have you considered a different hobby?',
+                'Is this your first time seeing letters?',
+                'Wow. No.',
             ],
             warm: [
                 'Nope',
@@ -73,6 +92,11 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 'Meh',
                 'Getting somewhere, slowly',
                 'Lukewarm at best',
+                'Not quite, champ',
+                'Close-ish. Heavy on the ish',
+                "Is that the best you've got?",
+                'Mediocre, as expected',
+                'A participation trophy at most',
             ],
             hot: [
                 'So close, and still wrong',
@@ -80,15 +104,29 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 'Ooh, hot',
                 'You can almost taste it',
                 "Don't blow it now",
+                "Agonising, isn't it?",
+                'Choking already?',
+                'So near, so useless',
+                'Close only counts in horseshoes',
+                'Feel the pressure yet?',
             ],
         } satisfies Record<Heat, string[]>,
-        // The win message for each guess number, first guess first.
+        // The win messages for each guess number, first guess first.
         wins: [
-            'Lucky',
-            'Show-off',
-            'Not bad, I suppose',
-            'Took your time',
-            'Finally',
+            ['Lucky', 'Did you cheat?', 'Who told you?', 'Pure fluke, and we both know it', 'Even a stopped clock is right twice a day'],
+            ['Show-off', 'Alright, smartypants', 'Calm down, Einstein', "Don't let it go to your head", 'Nobody likes a know-it-all'],
+            ['Not bad, I suppose', 'Adequate', 'Perfectly average', 'Fine. Have a biscuit', 'Thoroughly unremarkable'],
+            ['Took your time', 'Were you napping?', 'Glacial', 'My nan solves faster', 'Slow and steady loses most races'],
+            ['Finally', 'By the skin of your teeth', 'Phew. Pathetic, but phew', 'That was embarrassing for everyone', 'Scraped it, barely'],
+        ],
+        // A lost Game taunts, then reveals the answer.
+        losses: [
+            'Ha ha, sucka!',
+            'Better luck never.',
+            'Embarrassing.',
+            'Maybe stick to colouring in.',
+            'Go and have a little think about that.',
+            'Wow. Just wow.',
         ],
         get currentRow(): Tile[] {
             return this.board[this.currentRowIndex];
@@ -108,7 +146,7 @@ export default function game(saved: SavedGame = { guesses: [] }) {
 
             return [
                 ['Wordis ' + this.day, `${this.won ? rows.length : 'X'}/${this.guessesAllowed}`, ...(this.seconds === undefined ? [] : [`⏱ ${duration(this.seconds)}`])].join(' · '),
-                `"${this.won ? this.wins[this.currentRowIndex] : 'Ha ha, sucka!'}"`,
+                `"${this.verdict}"`,
                 ...rows.map((row) => row.map((tile) => squares[tile.status]).join('')),
                 location.origin,
             ].join('\n');
@@ -263,12 +301,13 @@ export default function game(saved: SavedGame = { guesses: [] }) {
         },
         applyResult({ statuses, answer, seconds }: GuessResult, celebrate = true): void {
             this.seconds ??= seconds;
+            const guesses = this.board.slice(0, this.currentRowIndex + 1).flat().map((tile) => tile.letter).join('');
             this.currentRow.forEach((tile, index) => tile.status = statuses[index]);
 
             if (statuses.every((status) => status === 'correct')) {
                 this.state = 'complete';
                 this.won = true;
-                this.message = this.wins[this.currentRowIndex];
+                this.message = this.verdict = pickFor(guesses, this.wins[this.currentRowIndex]);
                 if (celebrate) {
                     confetti();
                 }
@@ -276,11 +315,11 @@ export default function game(saved: SavedGame = { guesses: [] }) {
                 // The server reveals the answer only when the Game is lost.
                 this.state = 'complete';
                 this.answer = answer;
-                this.message = `Ha ha, sucka! It was ${this.answer.toUpperCase()}`;
+                this.verdict = pickFor(guesses, this.losses);
+                this.message = `${this.verdict} It was ${this.answer.toUpperCase()}`;
             } else {
                 this.currentRowIndex++;
-                const disses = this.disses[heat(statuses)];
-                this.message = disses[Math.floor(Math.random() * disses.length)];
+                this.message = pick(this.disses[heat(statuses)]);
             }
         },
     };
