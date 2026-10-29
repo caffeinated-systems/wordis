@@ -43,7 +43,8 @@
                 </template>
             </div>
             <div id="dock">
-                <div id="keyboard" :class="{ 'hidden': finished }" @click.stop="onScreenKey($event)" @mousedown="keepFocusOffKeys($event)">
+                {{-- The empty touchstart listener is what lets iOS Safari show a key as pressed. --}}
+                <div id="keyboard" ontouchstart="" :class="{ 'hidden': finished }" @click.stop="onScreenKey($event)" @mousedown="keepFocusOffKeys($event)">
                     <template x-for="row in letters">
                         <div class="row">
                             <template x-for="key in row">
