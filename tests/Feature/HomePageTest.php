@@ -44,5 +44,6 @@ test('the footer links to the privacy page, Caffeinated Systems and Office Lurgy
     get('/')
         ->assertSee('href="'.route('privacy').'"', false)
         ->assertSee('href="https://caffeinated.systems"', false)
-        ->assertSee('href="https://lurgy.caffeinated.systems"', false);
+        ->assertSee('href="https://lurgy.app"', false)
+        ->assertSeeText('Also from Caffeinated Systems: Office Lurgy');
 });
