@@ -74,6 +74,25 @@
     html[data-keys="D"] .key[data-key="Enter"], html[data-keys="D"] .key[data-key="Backspace"] { background: #6ba0e2; }
     html[data-keys="D"] .key.absent { background: #2b3850; color: #8090aa; }
 
+    /* E: Light tile. C's shading on today's light grey, so the keys still stand off the board. */
+    html[data-keys="E"] .key, html[data-keys="F"] .key {
+        background: linear-gradient(153deg, #e2e2e2 0%, #a8a8a8 100%);
+        color: #0e1626;
+        border-radius: 3px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45);
+        font-size: 1.25rem;
+    }
+    html[data-keys="E"] .key:hover, html[data-keys="F"] .key:hover { filter: brightness(1.08); }
+    html[data-keys="E"] .key:active, html[data-keys="F"] .key:active { filter: brightness(.85); }
+    html[data-keys="E"] .key.correct, html[data-keys="F"] .key.correct { background: var(--correct-color); box-shadow: 0 0 12px rgba(38, 246, 110, .42); }
+    html[data-keys="E"] .key.present, html[data-keys="F"] .key.present { background: var(--present-color); box-shadow: 0 0 12px rgba(246, 171, 38, .42); }
+    html[data-keys="E"] .key.absent, html[data-keys="F"] .key.absent { background: #2b3850; color: #6f80a0; box-shadow: none; }
+
+    /* F: Cool light tile. As E, but the grey leans toward the board's blue. */
+    html[data-keys="F"] .key {
+        background: linear-gradient(153deg, #e3e9f2 0%, #a3afc2 100%);
+    }
+
     #keys-prototype {
         position: fixed;
         bottom: 12px;
@@ -99,7 +118,7 @@
 </div>
 <script>
     (() => {
-        const variants = { A: 'Keycap', B: 'Framed', C: 'Tile', D: 'Inverted' };
+        const variants = { A: 'Keycap', B: 'Framed', C: 'Tile', D: 'Inverted', E: 'Light tile', F: 'Cool light tile' };
         const keys = Object.keys(variants);
         const bar = document.getElementById('keys-prototype');
         const show = (key) => {
