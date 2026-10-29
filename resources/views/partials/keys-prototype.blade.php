@@ -93,6 +93,22 @@
         background: linear-gradient(153deg, #e3e9f2 0%, #a3afc2 100%);
     }
 
+    /* G: Bevelled cool tile. F with a bevelled bottom edge that flattens when pressed, and an Enter that fits. */
+    html[data-keys="G"] .key {
+        background: linear-gradient(153deg, #e3e9f2 0%, #a3afc2 100%);
+        color: #0e1626;
+        border-radius: 4px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -4px 0 rgba(40, 58, 88, .35);
+        font-size: 1.25rem;
+        padding-bottom: 3px;
+    }
+    html[data-keys="G"] .key[data-key="Enter"] { font-size: .75rem; letter-spacing: .02em; }
+    html[data-keys="G"] .key:hover { filter: brightness(1.08); }
+    html[data-keys="G"] .key:active { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 -1px 0 rgba(40, 58, 88, .35); padding: 3px 0 0; filter: brightness(.92); }
+    html[data-keys="G"] .key.correct { background: var(--correct-color); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -4px 0 rgba(0, 60, 0, .3), 0 0 12px rgba(38, 246, 110, .42); }
+    html[data-keys="G"] .key.present { background: var(--present-color); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -4px 0 rgba(90, 80, 0, .3), 0 0 12px rgba(246, 171, 38, .42); }
+    html[data-keys="G"] .key.absent { background: #2b3850; color: #6f80a0; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .3); }
+
     #keys-prototype {
         position: fixed;
         bottom: 12px;
@@ -118,7 +134,7 @@
 </div>
 <script>
     (() => {
-        const variants = { A: 'Keycap', B: 'Framed', C: 'Tile', D: 'Inverted', E: 'Light tile', F: 'Cool light tile' };
+        const variants = { A: 'Keycap', B: 'Framed', C: 'Tile', D: 'Inverted', E: 'Light tile', F: 'Cool light tile', G: 'Bevelled cool tile' };
         const keys = Object.keys(variants);
         const bar = document.getElementById('keys-prototype');
         const show = (key) => {
