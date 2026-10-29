@@ -38,10 +38,12 @@ test('the privacy page says what is kept and who to ask about it', function () {
         ->assertSee('mailto:daniel.j.floris@gmail.com', false);
 });
 
-test('the footer links to the privacy page and to Caffeinated Systems', function () {
+test('the footer links to the privacy page, Caffeinated Systems and Office Lurgy', function () {
     Answer::factory()->today()->create();
 
     get('/')
         ->assertSee('href="'.route('privacy').'"', false)
-        ->assertSee('href="https://caffeinated.systems"', false);
+        ->assertSee('href="https://caffeinated.systems"', false)
+        ->assertSee('href="https://lurgy.app"', false)
+        ->assertSeeText('Also from Caffeinated Systems: Office Lurgy');
 });
