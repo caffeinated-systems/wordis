@@ -2,7 +2,6 @@
 :root {
     --correct-color: #47d747;
     --present-color: #f7f749;
-    --absent-color: #888;
     --invalid-color: #ff3f3f;
 }
 
@@ -124,18 +123,48 @@ h1 {
     gap: 10px;
 }
 
+/* Light keys stand off the dark board; the bevel along the bottom flattens while a key is pressed */
 .key {
     width: min(40px, 10% - 4px);
-    padding: 0;
-    background: #c5c5c5;
+    padding: 0 0 3px;
+    background: linear-gradient(153deg, #e3e9f2 0%, #a3afc2 100%);
+    color: #0e1626;
     border: 0;
     margin: 2px;
     height: 50px;
     border-radius: 4px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -4px 0 rgba(40, 58, 88, .35);
+    font: inherit;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
 }
 
 .key[data-key="Enter"], .key[data-key="Backspace"] {
     width: min(60px, 15% - 4px);
+}
+
+.key[data-key="Enter"] {
+    font-size: .75rem;
+    letter-spacing: .02em;
+}
+
+@media (hover: hover) {
+    .key:hover {
+        filter: brightness(1.08);
+    }
+}
+
+.key:focus-visible {
+    outline: 2px solid #fec63b;
+    outline-offset: 2px;
+}
+
+.key:active {
+    padding: 3px 0 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 -1px 0 rgba(40, 58, 88, .35);
+    filter: brightness(.92);
 }
 
 .row.invalid .tile, .tile.invalid {
@@ -150,6 +179,7 @@ h1 {
 
 .key.correct {
     background: var(--correct-color);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -4px 0 rgba(0, 60, 0, .3), 0 0 12px rgba(38, 246, 110, .42);
 }
 
 .tile.present {
@@ -159,10 +189,14 @@ h1 {
 
 .key.present {
     background: var(--present-color);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -4px 0 rgba(90, 80, 0, .3), 0 0 12px rgba(246, 171, 38, .42);
 }
 
+/* Absent keys sink into the board, so the letters still in play stand out */
 .key.absent {
-    background: var(--absent-color);
+    background: #2b3850;
+    color: #6f80a0;
+    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .3);
 }
 
 output {
