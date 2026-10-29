@@ -133,7 +133,12 @@ h1 {
     margin: 2px;
     height: 50px;
     border-radius: 4px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -4px 0 rgba(40, 58, 88, .35);
+    --key-bevel: 4px;
+    --key-edge: rgba(40, 58, 88, .35);
+    --key-glow: 0 0 transparent;
+    --key-highlight: rgba(255, 255, 255, .6);
+    box-shadow: inset 0 1px 0 var(--key-highlight), inset 0 calc(-1 * var(--key-bevel)) 0 var(--key-edge), var(--key-glow);
+    -webkit-tap-highlight-color: transparent;
     font: inherit;
     font-size: 1.25rem;
     font-weight: 600;
@@ -157,13 +162,13 @@ h1 {
 }
 
 .key:focus-visible {
-    outline: 2px solid #fec63b;
+    outline: 2px solid white;
     outline-offset: 2px;
 }
 
 .key:active {
     padding: 3px 0 0;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 -1px 0 rgba(40, 58, 88, .35);
+    --key-bevel: 1px;
     filter: brightness(.92);
 }
 
@@ -179,7 +184,8 @@ h1 {
 
 .key.correct {
     background: var(--correct-color);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -4px 0 rgba(0, 60, 0, .3), 0 0 12px rgba(38, 246, 110, .42);
+    --key-edge: rgba(0, 60, 0, .3);
+    --key-glow: 0 0 12px rgba(38, 246, 110, .42);
 }
 
 .tile.present {
@@ -189,14 +195,16 @@ h1 {
 
 .key.present {
     background: var(--present-color);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -4px 0 rgba(90, 80, 0, .3), 0 0 12px rgba(246, 171, 38, .42);
+    --key-edge: rgba(90, 80, 0, .3);
+    --key-glow: 0 0 12px rgba(246, 171, 38, .42);
 }
 
 /* Absent keys sink into the board, so the letters still in play stand out */
 .key.absent {
     background: #2b3850;
-    color: #6f80a0;
-    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .3);
+    color: #8494ab;
+    --key-highlight: transparent;
+    --key-edge: rgba(0, 0, 0, .3);
 }
 
 output {
