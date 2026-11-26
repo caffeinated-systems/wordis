@@ -13,4 +13,4 @@ On 27 November 2026 production moved from a Laravel Cloud MySQL 8.4 cluster to a
 - Postgres compares strings exactly, while MySQL's `utf8mb4_unicode_ci` ignored case, accents and trailing spaces. No lookup depends on this today, since accounts are matched by `workos_id` (see ADR 0003), but a new lookup on user-typed text has to normalise it itself.
 - Postgres has no unsigned integers, so `games.started_at` and `finished_at` overflow in January 2038 instead of 2106. Widen them before then.
 - The data was copied once during a 3-minute maintenance window. Production sessions live in cookies, not the database, so nobody was logged out and guests kept their Game.
-- For 7 days after the move the MySQL cluster is kept. Rolling back means copying users, games and answers back from Postgres before re-attaching MySQL; dropping the Postgres rows instead would pick a new answer for any day already played on Postgres.
+- The MySQL cluster was deleted the same day, once the move checked out, so there is no way back to MySQL. Recovering from a bad write means Postgres point-in-time restore.
