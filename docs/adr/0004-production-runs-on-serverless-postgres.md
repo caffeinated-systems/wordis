@@ -1,14 +1,16 @@
 ---
-status: accepted
+status: proposed
 ---
 
 # Production runs on Laravel Cloud Serverless Postgres, not Cloud MySQL
 
-Production moved in November 2026 from a Laravel Cloud MySQL 8.4 cluster to a Laravel Cloud Serverless Postgres 18 cluster. The reasons were the lower cost of a database that scales to zero, point-in-time restore (the MySQL cluster had only daily snapshots), and running the same setup as our other Cloud apps. The app has no raw SQL, so the move needed no code change: Cloud sets the `DB_*` variables when the cluster is attached, and `config/database.php` already had the `pgsql` connection.
+Production moves from a Laravel Cloud MySQL 8.4 cluster to a Laravel Cloud Serverless Postgres 18 cluster. The reasons are the lower cost of a database that scales to zero, point-in-time restore (the MySQL cluster has only daily snapshots), and running the same setup as our other Cloud apps. The app has no raw SQL, and `config/database.php` already has a `pgsql` connection that reads the `DB_*` variables Cloud sets when a cluster is attached, so the move needs no code change.
 
 ## Consequences
 
-- The tests and local development stay on SQLite, so nothing tests Postgres before production. `lockForUpdate()` row locks and anything else specific to Postgres are only exercised in production.
-- After the database has been idle for 5 minutes it suspends, so the next request waits about a second while it wakes.
-- Postgres compares strings case-sensitively, unlike MySQL's default collation. No lookup depends on this today, since accounts are matched by `workos_id` (see ADR 0003), but a new lookup on user-typed text has to handle case itself.
-- The data was copied once during a maintenance window, which ended every session.
+- The tests and local development stay on SQLite, so nothing tests Postgres before production. `lockForUpdate()` row locks are only exercised in production, and they behave differently there: Postgres takes no gap lock, so two devices making the very first guess of a Game at the same moment can overwrite each other instead of one getting an error.
+- After the database has been idle for 5 minutes it suspends, so the next request waits about a second while it wakes. Nothing polls the database (no queue worker, no scheduler), so it really does go idle.
+- Postgres compares strings exactly, while MySQL's `utf8mb4_unicode_ci` ignored case, accents and trailing spaces. No lookup depends on this today, since accounts are matched by `workos_id` (see ADR 0003), but a new lookup on user-typed text has to normalise it itself.
+- Postgres has no unsigned integers, so `games.started_at` and `finished_at` overflow in January 2038 instead of 2106. Widen them before then.
+- The data is copied once during a maintenance window, which ends every session. Signed-in players are logged out, and guests lose that day's Game, because a guest's Game lives only in the session.
+- For 7 days after the move the MySQL cluster is kept. Rolling back means copying users, games and answers back from Postgres before re-attaching MySQL; dropping the Postgres rows instead would pick a new answer for any day already played on Postgres.
